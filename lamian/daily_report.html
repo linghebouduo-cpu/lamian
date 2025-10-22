@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>日報表 - 令和博多管理系統</title>
+        <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+        <link href="css/styles.css" rel="stylesheet" />
+        <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    </head>
+    <body class="sb-nav-fixed">
+        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+            <!-- Navbar Brand-->
+            <a class="navbar-brand ps-3" href="index.html">令和博多管理系統</a>
+            <!-- Sidebar Toggle-->
+            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
+            <!-- Navbar Search-->
+            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+                <div class="input-group">
+                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
+                    <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
+                </div>
+            </form>
+            <!-- Navbar-->
+            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="#!">Settings</a></li>
+                        <li><a class="dropdown-item" href="#!">Activity Log</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" href="#!">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <div id="layoutSidenav">
+          <div id="layoutSidenav_nav">
+                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                    <div class="sb-sidenav-menu">
+                        <div class="nav">
+                            <div class="sb-sidenav-menu-heading">Core</div>
+                            <a class="nav-link" href="index.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                首頁
+                            </a>
+                            <div class="sb-sidenav-menu-heading">Pages</div>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
+                                <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
+                                人事管理
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    <a class="nav-link" href="employee.html">員工資料表</a>
+                                    <a class="nav-link" href="roster.html">班表管理</a>
+                                    <a class="nav-link" href="index%20copy%202.html">假別管理</a>
+                                    <a class="nav-link" href="layout-sidenav-light.html">打卡紀錄</a>
+                                    <a class="nav-link" href="layout-sidenav-light.html">薪資紀錄表</a>
+                                </nav>
+                            </div>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOperation" aria-expanded="false" aria-controls="collapseOperation">
+    <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
+    營運管理
+    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+</a>
+<div class="collapse" id="collapseOperation" aria-labelledby="headingOperation" data-bs-parent="#sidenavAccordion">
+    <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionOperation">
+        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#operationCollapseInventory" aria-expanded="false" aria-controls="operationCollapseInventory">
+            庫存管理
+            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+        </a>
+        <div class="collapse" id="operationCollapseInventory" aria-labelledby="headingInventory" data-bs-parent="#sidenavAccordionOperation">
+            <nav class="sb-sidenav-menu-nested nav">
+                <a class="nav-link" href="55.html">庫存查詢</a>
+                <a class="nav-link" href="55%20copy.html">庫存調整</a>
+            </nav>
+        </div>
+        <a class="nav-link" href="indexcopy2.html">
+            <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
+            請假申請
+        </a>
+        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#operationCollapseReport" aria-expanded="false" aria-controls="operationCollapseReport">
+            報表
+            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+        </a>
+        <div class="collapse" id="operationCollapseReport" aria-labelledby="headingReport" data-bs-parent="#sidenavAccordionOperation">
+            <nav class="sb-sidenav-menu-nested nav">
+                <a class="nav-link" href="daily_report.html">日報表</a>
+                <a class="nav-link" href="salary-report.html">薪資報表</a>
+                <a class="nav-link" href="schedule-report.html">班表報表</a>
+            </nav>
+        </div>
+    </nav>
+</div>
+
+    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseWebsite" aria-expanded="false" aria-controls="collapseWebsite">
+    <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>
+    網站管理
+    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+</a>
+<div class="collapse" id="collapseWebsite" aria-labelledby="headingWebsite" data-bs-parent="#sidenavAccordion">
+    <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionWebsite">
+        <a class="nav-link" href="layout-static.html">官網資料修改</a>
+        </a>
+        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#websiteCollapseMember" aria-expanded="false" aria-controls="websiteCollapseMember">
+            會員管理
+            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+        </a>
+        <div class="collapse" id="websiteCollapseMember" aria-labelledby="headingMember" data-bs-parent="#sidenavAccordionWebsite">
+            <nav class="sb-sidenav-menu-nested nav">
+                <a class="nav-link" href="member-list.html">會員清單</a>
+                <a class="nav-link" href="member-detail.html">詳細資料頁</a>
+                <a class="nav-link" href="point-manage.html">點數管理</a>
+            </nav>
+        </div>
+    </nav>
+</div>
+
+                            <div class="sb-sidenav-menu-heading">Addons</div>
+                            <a class="nav-link" href="charts.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
+                                Charts
+                            </a>
+                            <a class="nav-link" href="tables.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Tables
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="sb-sidenav-footer">
+                        <div class="small">Logged in as:</div>
+                        Start Bootstrap
+                    </div>
+                </nav>
+            </div>
+
+            
+             <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">日報表</h1>
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item"><a href="index.html">首頁</a></li>
+                            <li class="breadcrumb-item active">日報表</li>
+                        </ol>                     
+                    </div>
+                </main>
+                
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<main>
+<div class="container">
+    <div class="card p-4 shadow-sm">
+        <h4 class="mb-4">日報表</h4>
+
+        <!-- 日期與填表人 -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">日期</label>
+                <input type="date" class="form-control" id="report_date" onchange="updateWeekday()">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">星期</label>
+                <input type="text" class="form-control" id="weekday" placeholder="例如：星期一">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">填表人</label>
+                <input type="text" class="form-control" id="filled_by" placeholder="填寫人員姓名">
+            </div>
+        </div>
+
+<style>
+/* 固定支出欄背景淺紅，並套用到 input 裡面 */
+.fixed-expense-col {
+    background-color: #f8d7da;
+}
+
+.fixed-expense-col input {
+    background-color: #f8d7da; /* input 也套淺紅 */
+}
+</style>
+
+       <!-- 收入、支出、店內現金 -->
+<table class="table table-bordered text-center align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>收入</th>
+            <th>固定支出</th>
+            <th>變動支出</th>
+            <th>店內現金</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- 收入 -->
+        <tr>
+            <td>
+                <input class="form-control income" placeholder="現金收入" id="cash_income"
+                    oninput="validateNumber('cash_income'); calcIncome(); calcTotal()">
+            </td>
+            <td class="fixed-expense-col">
+                <small>薪資、加班費、獎金</small>
+                <input class="form-control fixed-expense" id="expense_salary" placeholder="人事成本"
+                    oninput="validateNumber('expense_salary'); calcExpense(); calcTotal()">
+            </td>
+            <td>
+                <small>肉類、蔬菜、調味料等</small>
+                <input class="form-control variable-expense" id="expense_food" placeholder="食材成本"
+                    oninput="validateNumber('expense_food'); calcExpense(); calcTotal()">
+            </td>
+            <td>
+                <input class="form-control cash" placeholder="1000 張數" id="cash_1000"
+                    oninput="validateNumber('cash_1000'); calcCash(); calcTotal()">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input class="form-control income" placeholder="Line Pay" id="linepay_income"
+                    oninput="validateNumber('linepay_income'); calcIncome(); calcTotal()">
+            </td>
+            <td class="fixed-expense-col">
+                <input class="form-control fixed-expense" id="expense_utilities" placeholder="水電瓦斯費"
+                    oninput="validateNumber('expense_utilities'); calcExpense(); calcTotal()">
+            </td>
+            <td>
+                <input class="form-control variable-expense" id="expense_delivery" placeholder="外送平台抽成"
+                    oninput="validateNumber('expense_delivery'); calcExpense(); calcTotal()">
+            </td>
+            <td>
+                <input class="form-control cash" placeholder="500 張數" id="cash_500"
+                    oninput="validateNumber('cash_500'); calcCash(); calcTotal()">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input class="form-control income" placeholder="Uber 實收" id="uber_income"
+                    oninput="validateNumber('uber_income'); calcIncome(); calcTotal()">
+            </td>
+            <td class="fixed-expense-col">
+                <small>租金</small>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <input type="month" class="form-control" id="rent_month" onchange="calcDailyRent()">
+                    <input type="text" class="form-control" id="rent_amount" placeholder="輸入租金總額"
+                        oninput="validateNumber('rent_amount'); calcDailyRent(); calcExpense(); calcTotal()">
+                    <input type="text" class="form-control" id="expense_rent" placeholder="每日租金" readonly
+                        style="background-color:#e9ecef;">
+                </div>
+            </td>
+            <td>
+                <input class="form-control variable-expense" id="expense_misc" placeholder="雜項支出"
+                    oninput="validateNumber('expense_misc'); calcExpense(); calcTotal()">
+            </td>
+            <td>
+                <input class="form-control cash" placeholder="100 張數" id="cash_100"
+                    oninput="validateNumber('cash_100'); calcCash(); calcTotal()">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input class="form-control income" placeholder="其他收入" id="other_income"
+                    oninput="validateNumber('other_income'); calcIncome(); calcTotal()">
+            </td>
+            <td class="fixed-expense-col"></td>
+            <td></td>
+            <td>
+                <input class="form-control cash" placeholder="50 張數" id="cash_50"
+                    oninput="validateNumber('cash_50'); calcCash(); calcTotal()">
+            </td>
+        </tr>
+        <!-- 合計 -->
+        <tr>
+            <td><strong>收入合計：</strong> <span id="total_income">0</span></td>
+            <td class="fixed-expense-col"><strong>固定支出合計：</strong> <span id="total_fixed_expense">0</span></td>
+            <td><strong>變動支出合計：</strong> <span id="total_variable_expense">0</span></td>
+            <td><strong>店內現金合計：</strong> <span id="cash_total">0</span></td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+
+<!-- ➕ 今日總收入 -->
+<div class="mb-4">
+    <label class="form-label">今日總收入（收入合計 - 支出）</label>
+    <input type="text" class="form-control" id="today_total" readonly>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">存入銀行</label>
+    <input type="number" class="form-control" id="deposit_to_bank" placeholder="輸入金額" oninput="calcTotal()">
+</div>
+
+<button class="btn btn-success" onclick="submitReport()">送出日報表</button>
+
+
+
+
+
+
+
+
+<!-- 省略 head 與 table 部分，直接 focus submitReport -->
+
+<script>
+
+
+//提醒
+// ➤ 即時檢查是否為數字
+function validateNumber(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = el.value.trim();
+    if (val === '') return; // 空值不提醒
+    if (isNaN(val)) {
+        alert(`請輸入數字！`);
+        el.value = '';
+    }
+}
+
+
+// 自動填寫日期與星期
+document.addEventListener("DOMContentLoaded", function() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const reportDate = `${yyyy}-${mm}-${dd}`;
+
+    const weekdays = ["日","一","二","三","四","五","六"];
+    const weekday = weekdays[today.getDay()];
+
+    const dateEl = document.getElementById("report_date");
+    const weekEl = document.getElementById("weekday");
+
+    if (dateEl) dateEl.value = reportDate;
+    if (weekEl) weekEl.value = weekday;
+});
+
+
+// 當使用者手動修改日期時，更新星期
+function updateWeekday() {
+    const dateEl = document.getElementById("report_date");
+    const weekEl = document.getElementById("weekday");
+
+    if (!dateEl || !weekEl) return;
+
+    const date = new Date(dateEl.value);
+    if (!isNaN(date)) {
+        const weekdays = ["日","一","二","三","四","五","六"];
+        weekEl.value = weekdays[date.getDay()];
+    }
+}
+
+
+// 自動計算收入合計
+function calcIncome() {
+    const income = [
+        parseFloat(document.getElementById('cash_income')?.value) || 0,
+        parseFloat(document.getElementById('linepay_income')?.value) || 0,
+        parseFloat(document.getElementById('uber_income')?.value) || 0,
+        parseFloat(document.getElementById('other_income')?.value) || 0
+    ];
+    const total = income.reduce((a, b) => a + b, 0);
+    const el = document.getElementById('total_income');
+    if (el) el.innerText = total.toFixed(0);
+}
+
+// 自動計算支出
+function calcExpense() {
+    const fixed = [
+        parseFloat(document.getElementById('expense_salary')?.value) || 0,
+        parseFloat(document.getElementById('expense_utilities')?.value) || 0,
+        parseFloat(document.getElementById('expense_rent')?.value) || 0
+    ];
+    const variable = [
+        parseFloat(document.getElementById('expense_food')?.value) || 0,
+        parseFloat(document.getElementById('expense_delivery')?.value) || 0,
+        parseFloat(document.getElementById('expense_misc')?.value) || 0
+    ];
+    const fixedTotal = fixed.reduce((a, b) => a + b, 0);
+    const variableTotal = variable.reduce((a, b) => a + b, 0);
+    if (document.getElementById('total_fixed_expense'))
+        document.getElementById('total_fixed_expense').innerText = fixedTotal.toFixed(0);
+    if (document.getElementById('total_variable_expense'))
+        document.getElementById('total_variable_expense').innerText = variableTotal.toFixed(0);
+}
+
+// 自動計算現金
+function calcCash() {
+    const cash_1000 = (parseFloat(document.getElementById('cash_1000')?.value) || 0) * 1000;
+    const cash_500  = (parseFloat(document.getElementById('cash_500')?.value) || 0) * 500;
+    const cash_100  = (parseFloat(document.getElementById('cash_100')?.value) || 0) * 100;
+    const cash_50   = (parseFloat(document.getElementById('cash_50')?.value) || 0) * 50;
+    const cash_10   = (parseFloat(document.getElementById('cash_10')?.value) || 0) * 10;
+    const cash_5    = (parseFloat(document.getElementById('cash_5')?.value) || 0) * 5;
+    const cash_1    = (parseFloat(document.getElementById('cash_1')?.value) || 0) * 1;
+    const total = cash_1000 + cash_500 + cash_100 + cash_50 + cash_10 + cash_5 + cash_1;
+    if (document.getElementById('cash_total'))
+        document.getElementById('cash_total').innerText = total.toFixed(0);
+}
+
+// 合計計算 (收入 - 支出)
+function calcTotal() {
+    const totalIncome = parseFloat(document.getElementById('total_income')?.innerText) || 0;
+    const fixed = parseFloat(document.getElementById('total_fixed_expense')?.innerText) || 0;
+    const variable = parseFloat(document.getElementById('total_variable_expense')?.innerText) || 0;
+    const total = totalIncome - (fixed + variable);
+    const el = document.getElementById('today_total');
+     if (el) el.value = total.toFixed(0);
+}
+
+// 計算每日租金
+function calcDailyRent() {
+    const month = document.getElementById('rent_month')?.value;
+    const rentAmount = parseFloat(document.getElementById('rent_amount')?.value) || 0;
+    if (month && rentAmount) {
+        const daysInMonth = new Date(month.split("-")[0], month.split("-")[1], 0).getDate();
+        const daily = Math.round(rentAmount / daysInMonth);
+        const el = document.getElementById('expense_rent');
+        if (el) el.value = daily;
+    }
+    calcExpense();
+    calcTotal();
+}
+
+// 送出報表
+function submitReport() {
+    const report_date = document.getElementById('report_date')?.value || '';
+
+    const data = {
+        report_date: report_date,
+        weekday: document.getElementById('weekday')?.value || '',
+        filled_by: document.getElementById('filled_by')?.value || '',
+        cash_income: parseFloat(document.getElementById('cash_income')?.value) || 0,
+        linepay_income: parseFloat(document.getElementById('linepay_income')?.value) || 0,
+        uber_income: parseFloat(document.getElementById('uber_income')?.value) || 0,
+        other_income: parseFloat(document.getElementById('other_income')?.value) || 0,
+        expense_food: parseFloat(document.getElementById('expense_food')?.value) || 0,
+        expense_salary: parseFloat(document.getElementById('expense_salary')?.value) || 0,
+        expense_utilities: parseFloat(document.getElementById('expense_utilities')?.value) || 0,
+        expense_delivery: parseFloat(document.getElementById('expense_delivery')?.value) || 0,
+        expense_misc: parseFloat(document.getElementById('expense_misc')?.value) || 0,
+        expense_rent: parseFloat(document.getElementById('expense_rent')?.value) || 0,
+        cash_1000: parseFloat(document.getElementById('cash_1000')?.value) || 0,
+        cash_500: parseFloat(document.getElementById('cash_500')?.value) || 0,
+        cash_100: parseFloat(document.getElementById('cash_100')?.value) || 0,
+        cash_50: parseFloat(document.getElementById('cash_50')?.value) || 0,
+        cash_10: parseFloat(document.getElementById('cash_10')?.value) || 0,
+        cash_5: parseFloat(document.getElementById('cash_5')?.value) || 0,
+        cash_1: parseFloat(document.getElementById('cash_1')?.value) || 0,
+        deposit_to_bank: parseFloat(document.getElementById('deposit_to_bank')?.value) || 0
+    };
+
+
+    fetch('daily_report.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(resp => {
+        if (resp.success) {
+            alert("✅ 日報表送出成功！");
+        } else {
+            alert("❌ 送出失敗：" + (resp.message || ''));
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("⚠️ 系統錯誤，請稍後再試");
+    });
+}
+</script>
+
+</main>
+
+
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright &copy; Xxing0625</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                &middot;
+                                <a href="#">Terms &amp; Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="js/scripts.js"></script>
+    </body>
+</html>

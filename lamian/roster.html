@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>班表管理 - 令和博多管理系統</title>
+        <link href="css/styles.css" rel="stylesheet" />
+        <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    </head>
+    <body class="sb-nav-fixed">
+         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+            <!-- Navbar Brand-->
+            <a class="navbar-brand ps-3" href="index.html">令和博多管理系統</a>
+            <!-- Sidebar Toggle-->
+            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
+            <!-- Navbar Search-->
+            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+                <div class="input-group">
+                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
+                    <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
+                </div>
+            </form>
+            <!-- Navbar-->
+            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="#!">Settings</a></li>
+                        <li><a class="dropdown-item" href="#!">Activity Log</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" href="#!">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <div id="layoutSidenav">
+            <div id="layoutSidenav_nav">
+                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                    <div class="sb-sidenav-menu">
+                        <div class="nav">
+                            <div class="sb-sidenav-menu-heading">Core</div>
+                            <a class="nav-link" href="index.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                Dashboard
+                            </a>
+                            <div class="sb-sidenav-menu-heading">Pages</div>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
+                                <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
+                                人事管理
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    <a class="nav-link" href="layout-static.html">員工資料表</a>
+                                    <a class="nav-link" href="layout-sidenav-light.html">班表管理</a>
+                                    <a class="nav-link" href="index%20copy%202.html">假別管理</a>
+                                    <a class="nav-link" href="layout-sidenav-light.html">打卡紀錄</a>
+                                    <a class="nav-link" href="layout-sidenav-light.html">薪資紀錄表</a>
+                                </nav>
+                            </div>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOperation" aria-expanded="false" aria-controls="collapseOperation">
+    <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
+    營運管理
+    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+</a>
+<div class="collapse" id="collapseOperation" aria-labelledby="headingOperation" data-bs-parent="#sidenavAccordion">
+    <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionOperation">
+        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#operationCollapseInventory" aria-expanded="false" aria-controls="operationCollapseInventory">
+            庫存管理
+            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+        </a>
+        <div class="collapse" id="operationCollapseInventory" aria-labelledby="headingInventory" data-bs-parent="#sidenavAccordionOperation">
+            <nav class="sb-sidenav-menu-nested nav">
+                <a class="nav-link" href="55.html">庫存查詢</a>
+                <a class="nav-link" href="55%20copy.html">庫存調整</a>
+            </nav>
+        </div>
+        <a class="nav-link" href="index%20copy.html">
+            <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>
+            請假申請
+        </a>
+        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#operationCollapseReport" aria-expanded="false" aria-controls="operationCollapseReport">
+            報表
+            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+        </a>
+        <div class="collapse" id="operationCollapseReport" aria-labelledby="headingReport" data-bs-parent="#sidenavAccordionOperation">
+            <nav class="sb-sidenav-menu-nested nav">
+                <a class="nav-link" href="daily%20report%20.html">日報表</a>
+                <a class="nav-link" href="salary-report.html">薪資報表</a>
+                <a class="nav-link" href="schedule-report.html">班表報表</a>
+            </nav>
+        </div>
+    </nav>
+</div>
+
+    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseWebsite" aria-expanded="false" aria-controls="collapseWebsite">
+    <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>
+    網站管理
+    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+</a>
+<div class="collapse" id="collapseWebsite" aria-labelledby="headingWebsite" data-bs-parent="#sidenavAccordion">
+    <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionWebsite">
+        <a class="nav-link" href="layout-static.html">官網資料修改</a>
+        </a>
+        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#websiteCollapseMember" aria-expanded="false" aria-controls="websiteCollapseMember">
+            會員管理
+            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+        </a>
+        <div class="collapse" id="websiteCollapseMember" aria-labelledby="headingMember" data-bs-parent="#sidenavAccordionWebsite">
+            <nav class="sb-sidenav-menu-nested nav">
+                <a class="nav-link" href="member-list.html">會員清單</a>
+                <a class="nav-link" href="member-detail.html">詳細資料頁</a>
+                <a class="nav-link" href="point-manage.html">點數管理</a>
+            </nav>
+        </div>
+    </nav>
+</div>
+                            <div class="sb-sidenav-menu-heading">Addons</div>
+                            <a class="nav-link" href="charts.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
+                                Charts
+                            </a>
+                            <a class="nav-link" href="tables.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Tables
+                            </a>
+                        </div>
+                        
+                    </div>
+                    
+                    <div class="sb-sidenav-footer">
+                        <div class="small">Logged in as:</div>
+                        Start Bootstrap
+                    </div>
+                </nav>
+            </div>
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">班表管理</h1>
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                            <li class="breadcrumb-item active">班表管理</li>
+                        </ol>                     
+                    </div>
+                </main>
+                
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+
+<!-- ✅ 置中區塊開始 -->
+<div class="container">
+
+    <!-- 🔍 查詢日期 -->
+    <div class="d-flex justify-content-start align-items-center gap-2 mb-4">
+        <select id="yearSelect" class="form-select" style="width: 100px;"></select>
+        <select id="monthSelect" class="form-select" style="width: 100px;"></select>
+        <select id="daySelect" class="form-select" style="width: 100px;"></select>
+        <button class="btn btn-primary" onclick="loadSchedule()">查詢</button>
+    </div>
+
+    <!-- 📅 本週班表 -->
+    <h5>本週班表</h5>
+    <table class="table table-bordered text-center align-middle">
+        <thead class="table-primary" id="weekHeader">
+  <!-- 自動產生 -->
+</thead>
+        <tbody id="currentScheduleTable">
+            <!-- 這裡會載入資料 -->
+        </tbody>
+    </table>
+
+    <!-- ✏️ 編輯班表，卡片包起來 -->
+    <div class="card mt-5">
+        <div class="card-body">
+             <h4 class="mb-3">✏️ 編輯班表</h4>
+    <table class="table table-bordered" id="scheduleTable">
+        <thead class="table-light">
+            <tr>
+                <th>姓名</th>
+                <th>時段</th>
+                <!-- 日期欄位自動插入 -->
+            </tr>
+        </thead>
+        <tbody id="scheduleBody">
+            <!-- 自動插入排班列 -->
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary ms-2" onclick="saveSchedule()">儲存班表</button>
+    <button class="btn btn-primary ms-2" onclick="editSchedule()">編輯班表</button>
+<!-- ✅ 置中區塊結束 -->
+
+<!-- 🛠️ Javascript -->
+
+    <script>
+        // ✅ 班別選單
+        const shifts = ["", "1000-1400", "1200-1600", "1400-1800", "1600-2200", "1700-2200", "1800-2200"];
+
+        // ✅ 模擬後端載入的員工名單
+        const employees = ["韶靜", "承諺", "麗靜", "佩均", "宜伶", "季嫻", "沛瑜"];
+
+        // ✅ 自動產出星期一 ~ 日的日期（含月日與星期）
+        function getThisWeekDates() {
+            const today = new Date();
+            const day = today.getDay(); // 星期幾（0=日）
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1)); // 找到本週一
+
+            const dates = [];
+            const weekdays = ["一", "二", "三", "四", "五", "六", "日"];
+
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(monday);
+                d.setDate(monday.getDate() + i);
+                const label = `${d.getMonth() + 1}/${d.getDate()}<br>星期${weekdays[i]}`;
+                dates.push(label);
+            }
+
+            return dates;
+        }
+
+        // ✅ 插入表頭的日期欄位
+        function renderTableHeader() {
+            const dates = getThisWeekDates();
+            const headerRow = document.querySelector("#scheduleTable thead tr");
+            dates.forEach(dateStr => {
+                const th = document.createElement("th");
+                th.innerHTML = dateStr;
+                headerRow.appendChild(th);
+            });
+        }
+
+        // ✅ 建立表格內容（每位員工兩行：中午與晚上）
+        function renderScheduleRows() {
+            const tbody = document.getElementById("scheduleBody");
+            employees.forEach(name => {
+                ["中午", "晚上"].forEach(period => {
+                    const tr = document.createElement("tr");
+
+                    // 只在中午欄位加上名字（合併儲存格）
+                    if (period === "中午") {
+                        const nameTd = document.createElement("td");
+                        nameTd.innerText = name;
+                        nameTd.rowSpan = 2;
+                        tbody.appendChild(tr);
+                        tr.appendChild(nameTd);
+                    }
+
+                    // 時段欄
+                    const timeTd = document.createElement("td");
+                    timeTd.innerText = period;
+                    tr.appendChild(timeTd);
+
+                    // 每天的班別選單
+                    for (let i = 0; i < 7; i++) {
+                        const td = document.createElement("td");
+                        const select = document.createElement("select");
+                        select.className = "form-select form-select-sm time-select";
+                        shifts.forEach(s => {
+                            const opt = document.createElement("option");
+                            opt.value = s;
+                            opt.textContent = s || "—";
+                            select.appendChild(opt);
+                        });
+                        td.appendChild(select);
+                        tr.appendChild(td);
+                    }
+
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        // 儲存功能（暫示警示）
+        function saveSchedule() {
+            alert("✅ 班表已儲存（模擬）");
+        }
+
+        // 未來你可以在這裡控制欄位解鎖、變色或開啟編輯功能
+        function editSchedule() {
+            alert("進入編輯模式！（目前為範例功能）");
+        }
+
+        // 初始化
+        renderTableHeader();
+        renderScheduleRows();
+    </script>
+</body>
+</html>
+<!-- ✅ 置中區塊結束 -->
+
+<!-- 🛠️ Javascript -->
+<script>
+const yearSelect = document.getElementById('yearSelect');
+const monthSelect = document.getElementById('monthSelect');
+const daySelect = document.getElementById('daySelect');
+
+// 初始化日期
+const today = new Date();
+for (let y = 2020; y <= 2030; y++) {
+    yearSelect.innerHTML += `<option value="${y}" ${y === today.getFullYear() ? 'selected' : ''}>${y}</option>`;
+}
+for (let m = 1; m <= 12; m++) {
+    monthSelect.innerHTML += `<option value="${m}" ${m === today.getMonth() + 1 ? 'selected' : ''}>${m}</option>`;
+}
+for (let d = 1; d <= 31; d++) {
+    daySelect.innerHTML += `<option value="${d}" ${d === today.getDate() ? 'selected' : ''}>${d}</option>`;
+}
+
+// 查詢班表
+function loadSchedule() {
+    const year = yearSelect.value;
+    const month = monthSelect.value.padStart(2, '0');
+    const day = daySelect.value.padStart(2, '0');
+    const date = `${year}-${month}-${day}`;
+
+    fetch('api_schedule.php?date=' + date)
+        .then(res => res.json())
+        .then(data => {
+            const table = document.getElementById('currentScheduleTable');
+            table.innerHTML = data.map(row => `
+                <tr>
+                    <th class="bg-light">${row.timeSlot}</th>
+                    ${row.days.map(val => `<td>${val}</td>`).join('')}
+                </tr>
+            `).join('');
+        });
+}
+
+function generateWeekHeader() {
+  const weekHeader = document.getElementById('weekHeader');
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 星期幾（0 = Sunday）
+  const monday = new Date(today); // 計算週一
+  monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+
+  const weekdayLabels = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+  const dateCells = [];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    dateCells.push(`<th>${weekdayLabels[i]}<br>${mm}/${dd}</th>`);
+  }
+
+  weekHeader.innerHTML = `<tr><th></th>${dateCells.join('')}</tr>`;
+}
+
+window.addEventListener('DOMContentLoaded', generateWeekHeader);
+
+
+// 儲存班表
+function saveSchedule() {
+    alert('班表儲存成功！（範例功能，未連 API）');
+}
+</script>
+
+</body>
+</html>
+
+
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright &copy; Xxing0625</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                &middot;
+                                <a href="#">Terms &amp; Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="js/scripts.js"></script>
+    </body>
+</html>
