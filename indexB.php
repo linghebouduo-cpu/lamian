@@ -1,5 +1,5 @@
 <?php
-// /lamian-ukn/index.php - A級老闆頁面
+// /lamian-ukn/indexB.php - B級管理員頁面
 // 🔥 啟用登入保護
 session_start();
 
@@ -9,19 +9,19 @@ if (!isset($_SESSION['uid'])) {
     exit;
 }
 
-// 2. 檢查用戶等級 - 只有 A 級可以訪問此頁
+// 2. 檢查用戶等級 - 只有 B 級可以訪問此頁
 $userLevel = $_SESSION['user_level'] ?? $_SESSION['role_code'] ?? 'C';
 
-if ($userLevel === 'B') {
-    // B 級用戶跳轉到 indexB.php
-    header('Location: indexB.php');
+if ($userLevel === 'A') {
+    // A 級用戶跳轉到 index.php
+    header('Location: index.php');
     exit;
 } elseif ($userLevel === 'C') {
     // C 級用戶跳轉到 indexC.php
     header('Location: indexC.php');
     exit;
 }
-// 如果是 A 級，繼續執行
+// 如果是 B 級，繼續執行
 
 // 3. 取得用戶資訊
 $userName = $_SESSION['name'] ?? '用戶';
@@ -198,7 +198,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
 <body class="sb-nav-fixed">
   <!-- Topbar -->
   <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-    <a class="navbar-brand ps-3" href="index.php">員工管理系統</a>
+    <a class="navbar-brand ps-3" href="index.php">員工管理系統B</a>
     <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
 
     <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
@@ -445,8 +445,8 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
 
   <script>
     // ---- 常數（PHP 變數注入） ----
-    const API_BASE  = <?php echo json_encode($API_BASE_URL, JSON_UNESCAPED_SLASHES); ?>;
-    const DATA_BASE = <?php echo json_encode($DATA_BASE_URL, JSON_UNESCAPED_SLASHES); ?>;
+    const API_BASE  = <?php echo json_encode($API_BASE_URL, JSON_UNESCAPED_SLASHES); ?>;   // /lamian-ukn/api
+    const DATA_BASE = <?php echo json_encode($DATA_BASE_URL, JSON_UNESCAPED_SLASHES); ?>;  // /lamian-ukn/首頁
 
     const $  = s => document.querySelector(s);
     const el = id => document.getElementById(id);
@@ -463,7 +463,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
       const userName = <?php echo json_encode($userName, JSON_UNESCAPED_UNICODE); ?>;
       const userId = <?php echo json_encode($userId, JSON_UNESCAPED_UNICODE); ?>;
       
-      console.log('✅ A級老闆已登入:', userName, 'ID:', userId);
+      console.log('✅ B級管理員已登入:', userName, 'ID:', userId);
       
       // PHP 已經設定好顯示了，這裡只是確認
       el('loggedAs').textContent = userName;
