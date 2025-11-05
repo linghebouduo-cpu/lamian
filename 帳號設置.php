@@ -1,7 +1,20 @@
 <?php
-// /lamian-ukn/賬號設置.php
-require_once __DIR__ . '/api/auth_guard.php';  // 登入保護（已登入才可看）
-$API_BASE_URL = '/lamian-ukn/api';          // 如果你的 API 目錄不同，改這裡
+// /lamian-ukn/帳號設置.php
+// 🔥 啟用登入保護
+session_start();
+
+// 檢查是否已登入
+if (!isset($_SESSION['uid'])) {
+    header('Location: login.php');
+    exit;
+}
+
+// 取得用戶資訊
+$userName = $_SESSION['name'] ?? '用戶';
+$userId = $_SESSION['uid'] ?? '';
+$userLevel = $_SESSION['user_level'] ?? $_SESSION['role_code'] ?? 'C';
+
+$API_BASE_URL = '/lamian-ukn/api';
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -55,8 +68,8 @@ $API_BASE_URL = '/lamian-ukn/api';          // 如果你的 API 目錄不同，�
     <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <img class="user-avatar rounded-circle me-2" src="https://i.pravatar.cc/40?img=12" width="28" height="28" alt="">
-          <span id="navUserName">我的賬號</span>
+          <img class="user-avatar rounded-circle me-2" src="https://i.pravatar.cc/40?u=<?php echo urlencode($userName); ?>" width="28" height="28" alt="">
+          <span id="navUserName"><?php echo htmlspecialchars($userName); ?></span>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
           <li><a class="dropdown-item" href="賬號設置.php">賬號設置</a></li>
@@ -85,10 +98,33 @@ $API_BASE_URL = '/lamian-ukn/api';          // 如果你的 API 目錄不同，�
               <nav class="sb-sidenav-menu-nested nav">
                 <a class="nav-link" href="員工資料表.php">員工資料表</a>
                 <a class="nav-link" href="班表管理.php">班表管理</a>
-                <a class="nav-link" href="日報表記錄.php">日報表記錄</a>
+                <a class="nav-link" href="日報表記錄.html">日報表記錄</a>
                 <a class="nav-link" href="假別管理.php">假別管理</a>
-                <a class="nav-link" href="打卡記錄.php">打卡紀錄</a>
-                <a class="nav-link" href="薪資管理.php">薪資管理</a>
+                <a class="nav-link" href="打卡管理.php">打卡管理</a>
+                <a class="nav-link" href="薪資管理.html">薪資管理</a>
+              </nav>
+            </div>
+
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOperation" aria-expanded="false">
+              <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>營運管理
+              <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+            </a>
+            <div class="collapse" id="collapseOperation" data-bs-parent="#sidenavAccordion">
+              <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionOperation">
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#operationCollapseInventory" aria-expanded="false">
+                  庫存管理
+                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="operationCollapseInventory" data-bs-parent="#sidenavAccordionOperation">
+                  <nav class="sb-sidenav-menu-nested nav">
+                    <a class="nav-link" href="庫存查詢.php">庫存查詢</a>
+                    <a class="nav-link" href="庫存調整.php">庫存調整</a>
+                  </nav>
+                </div>
+
+                <a class="nav-link" href="日報表.html"><div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
+                <a class="nav-link" href="薪資管理.html"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
+                <a class="nav-link" href="班表.html"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
               </nav>
             </div>
 
@@ -101,8 +137,9 @@ $API_BASE_URL = '/lamian-ukn/api';          // 如果你的 API 目錄不同，�
             <div class="collapse" id="collapseWebsite" data-bs-parent="#sidenavAccordion">
               <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionWebsite">
                 <a class="nav-link" href="layout-static.php">官網資料修改</a>
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#websiteCollapseMember">
-                  會員管理 <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#websiteCollapseMember" aria-expanded="false">
+                  會員管理
+                  <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                 </a>
                 <div class="collapse" id="websiteCollapseMember" data-bs-parent="#sidenavAccordionWebsite">
                   <nav class="sb-sidenav-menu-nested nav">
@@ -121,7 +158,7 @@ $API_BASE_URL = '/lamian-ukn/api';          // 如果你的 API 目錄不同，�
 
         <div class="sb-sidenav-footer">
           <div class="small">Logged in as:</div>
-          <span id="loggedAs">我的賬號</span>
+          <span id="loggedAs"><?php echo htmlspecialchars($userName); ?></span>
         </div>
       </nav>
     </div>
@@ -264,19 +301,38 @@ $API_BASE_URL = '/lamian-ukn/api';          // 如果你的 API 目錄不同，�
 
     async function loadMe(){
       try{
+        // 🔥 優先使用 PHP 傳遞的用戶資訊
+        const userName = <?php echo json_encode($userName, JSON_UNESCAPED_UNICODE); ?>;
+        const userId = <?php echo json_encode($userId, JSON_UNESCAPED_UNICODE); ?>;
+        
+        console.log('✅ 已登入用戶:', userName, 'ID:', userId);
+        
+        // 設定用戶名顯示
+        el('navUserName').textContent = userName;
+        const logged = document.getElementById('loggedAs');
+        if (logged) logged.textContent = userName;
+        
+        // 然後才從 API 載入詳細資料
         const r = await fetch(API_ME, {credentials:'include'});
-        if(!r.ok) throw new Error('HTTP '+r.status);
+        if(!r.ok) {
+          // 如果 API 失敗，至少設定基本資料
+          el('empNo').value = userId;
+          el('empName').value = userName;
+          throw new Error('HTTP '+r.status);
+        }
         const d = await r.json();
 
-        el('navUserName').textContent = d.name || '我的賬號';
+        // 更新頭像
         if (d.avatar_url) {
           const url = d.avatar_url + (d.avatar_url.includes('?')?'&':'?') + 'v=' + Date.now();
           el('avatarImg').src = url;
-          const navA = document.querySelector('.navbar .user-avatar'); if(navA) navA.src = url;
+          const navA = document.querySelector('.navbar .user-avatar'); 
+          if(navA) navA.src = url;
         }
 
-        el('empNo').value    = d.id ?? '';
-        el('empName').value  = d.name ?? '';
+        // 填入表單資料
+        el('empNo').value    = d.id ?? userId;
+        el('empName').value  = d.name ?? userName;
         el('empPhone').value = d.Telephone ?? d.phone ?? '';
         el('empTitle').value = d.Position ?? d.title ?? '';
 
@@ -285,12 +341,11 @@ $API_BASE_URL = '/lamian-ukn/api';          // 如果你的 API 目錄不同，�
         el('emgName').value  = d.emergency_contact ?? '';
         el('emgPhone').value = d.emergency_phone ?? '';
         el('memo').value     = d.memo ?? '';
-
-        const who = d.name || '我的賬號';
-        const logged = document.getElementById('loggedAs');
-        if (logged) logged.textContent = who;
+        
       }catch(e){
-        console.error(e); showErr('載入賬號資訊失敗');
+        console.error('載入詳細資料失敗:', e);
+        // 即使 API 失敗，也不顯示錯誤，因為基本資料已經設定了
+        // showErr('載入賬號資訊失敗');
       }
     }
 

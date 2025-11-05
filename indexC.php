@@ -37,8 +37,12 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <title>首頁 - 員工管理系統</title>
+  <title>首頁 - 員工管理系統（C 級）</title>
 
+  <!-- ✅ 必要的 Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <!-- 你的既有資源 -->
   <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
   <link href="css/styles.css" rel="stylesheet" />
   <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
@@ -59,95 +63,22 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
     body{background:linear-gradient(135deg,#fff 0%,#fff 100%);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;min-height:100vh}
     .sb-topnav{background:var(--dark-bg)!important;border:none;box-shadow:var(--card-shadow);backdrop-filter:blur(10px)}
     .navbar-brand{font-weight:700;font-size:1.5rem;background:linear-gradient(45deg,#fff,#fff);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
-    
-    /* 美化搜尋區域 */
-    .search-container-wrapper {
-      position: relative;
-      width: 100%;
-      max-width: 400px;
-    }
-    .search-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 50px;
-      padding: 4px 4px 4px 20px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(10px);
-      border: 2px solid transparent;
-    }
-    .search-container:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.3);
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-    .search-container:focus-within {
-      background: rgba(255, 255, 255, 0.25);
-      border-color: rgba(255, 255, 255, 0.5);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-    .search-input {
-      flex: 1;
-      border: none;
-      outline: none;
-      background: transparent;
-      padding: 10px 12px;
-      font-size: 14px;
-      color: #fff;
-      font-weight: 500;
-    }
-    .search-input::placeholder {
-      color: rgba(255, 255, 255, 0.7);
-      font-weight: 400;
-    }
-    .search-btn {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-      border: none;
-      border-radius: 40px;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      position: relative;
-      overflow: hidden;
-    }
-    .search-btn::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-radius: 50%;
-      background: rgba(251, 185, 124, 0.3);
-      transform: translate(-50%, -50%);
-      transition: width 0.6s, height 0.6s;
-    }
-    .search-btn:hover::before {
-      width: 80px;
-      height: 80px;
-    }
-    .search-btn:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-    }
-    .search-btn:active {
-      transform: scale(0.95);
-    }
-    .search-btn i {
-      color: #ff6b6b;
-      font-size: 16px;
-      position: relative;
-      z-index: 1;
-    }
 
+    /* 搜尋框 */
+    .search-container-wrapper { position: relative; width: 100%; max-width: 400px; }
+    .search-container{ position:relative; display:flex; align-items:center; background:rgba(255,255,255,.15); border-radius:50px; padding:4px 4px 4px 20px; transition:all .3s cubic-bezier(.4,0,.2,1); backdrop-filter:blur(10px); border:2px solid transparent;}
+    .search-container:hover{ background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.3); transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,.15);}
+    .search-container:focus-within{ background:rgba(255,255,255,.25); border-color:rgba(255,255,255,.5); transform:translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,.2);}
+    .search-input{ flex:1; border:none; outline:none; background:transparent; padding:10px 12px; font-size:14px; color:#fff; font-weight:500;}
+    .search-input::placeholder{ color:rgba(255,255,255,.7); font-weight:400;}
+    .search-btn{ background:linear-gradient(135deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.7) 100%); border:none; border-radius:40px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .3s ease; box-shadow:0 4px 12px rgba(0,0,0,.15); position:relative; overflow:hidden;}
+    .search-btn::before{ content:''; position:absolute; top:50%; left:50%; width:0; height:0; border-radius:50%; background:rgba(251,185,124,.3); transform:translate(-50%,-50%); transition:width .6s, height .6s;}
+    .search-btn:hover::before{ width:80px; height:80px;}
+    .search-btn:hover{ transform:scale(1.08); box-shadow:0 6px 20px rgba(0,0,0,.25);}
+    .search-btn:active{ transform:scale(.95);}
+    .search-btn i{ color:#ff6b6b; font-size:16px; position:relative; z-index:1;}
+
+    /* 側欄 */
     .sb-sidenav{background:linear-gradient(180deg,#fbb97ce4 0%,#ff00006a 100%)!important;box-shadow:var(--card-shadow);backdrop-filter:blur(10px)}
     .sb-sidenav-menu-heading{color:rgba(255,255,255,.7)!important;font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:1px;padding:20px 15px 10px!important;margin-top:15px}
     .sb-sidenav .nav-link{border-radius:15px;margin:5px 15px;padding:12px 15px;position:relative;overflow:hidden;color:rgba(255,255,255,.9)!important;font-weight:500;backdrop-filter:blur(10px)}
@@ -160,6 +91,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
     .sb-sidenav-menu-nested .nav-link:hover{background:rgba(255,255,255,.1)!important;transform:translateX(5px);padding-left:50px}
     .sb-sidenav-footer{background:rgba(255,255,255,.1)!important;color:#fff!important;border-top:1px solid rgba(255,255,255,.2);padding:20px 15px;margin-top:20px}
     .sb-sidenav-footer .small{color:rgba(255,255,255,.7)!important;font-size:.8rem}
+
     .container-fluid{padding:30px!important}
     h1{background:var(--primary-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:700;font-size:2.5rem;margin-bottom:30px}
     .alert{border:none;border-radius:var(--border-radius);background:var(--warning-gradient);color:#fff;box-shadow:var(--card-shadow);backdrop-filter:blur(10px)}
@@ -198,7 +130,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
 <body class="sb-nav-fixed">
   <!-- Topbar -->
   <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-    <a class="navbar-brand ps-3" href="index.php">員工管理系統C</a>
+    <a class="navbar-brand ps-3" href="indexC.php">員工管理系統C</a>
     <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
 
     <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
@@ -234,25 +166,28 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
         <div class="sb-sidenav-menu">
           <div class="nav">
             <div class="sb-sidenav-menu-heading">Core</div>
-            <a class="nav-link active" href="index.php">
+            <a class="nav-link active" href="indexC.php">
               <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>首頁
             </a>
 
             <div class="sb-sidenav-menu-heading">Pages</div>
-
-            <a class="nav-link" href="日報表.php"><div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
-            <a class="nav-link" href="薪資記錄.php"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
-            <a class="nav-link" href="班表.php"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
-            <a class="nav-link" href="請假申請.php"><div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>請假申請</a>
-
-
-
-            <div class="sb-sidenav-menu-heading">Addons</div>
-            <a class="nav-link" href="charts.php">
-              <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>Charts
+            <!-- ✅ 直接平鋪的按鈕：不使用 collapse -->
+            <a class="nav-link" href="班表.html">
+              <div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表
+            </a>
+            <a class="nav-link" href="請假申請.php">
+              <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>請假申請
+            </a>
+                        <a class="nav-link" href="薪資管理.php">
+              <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄
+            </a>
+            <a class="nav-link" href="打卡記錄.php">
+              <div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>打卡記錄
             </a>
           </div>
         </div>
+
+
         <div class="sb-sidenav-footer">
           <div class="small">Logged in as:</div>
           <span id="loggedAs"><?php echo htmlspecialchars($userName); ?></span>
@@ -289,7 +224,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
           <div class="card mb-4">
             <div class="card-header">
               <i class="fas fa-calendar-alt me-2"></i>本週班表總覽
-              <a href="班表管理.php" class="btn btn-sm btn-outline-primary float-end"><i class="fas fa-edit me-1"></i>編輯班表</a>
+              <a href="班表.html" class="btn btn-sm btn-outline-primary float-end"><i class="fas fa-edit me-1"></i>編輯班表</a>
             </div>
             <div class="card-body">
               <div class="table-responsive">
@@ -345,17 +280,15 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
 
     // 取得登入者資訊（已從 PHP Session 取得）
     async function loadLoggedInUser(){
-      // 🔥 使用 PHP 傳遞的用戶資訊，不需要呼叫 API
       const userName = <?php echo json_encode($userName, JSON_UNESCAPED_UNICODE); ?>;
       const userId = <?php echo json_encode($userId, JSON_UNESCAPED_UNICODE); ?>;
-      
+
       console.log('✅ C級員工已登入:', userName, 'ID:', userId);
-      
-      // PHP 已經設定好顯示了，這裡只是確認
+
       el('loggedAs').textContent = userName;
       const navName = el('navUserName');
       if(navName) navName.textContent = userName;
-      
+
       // 更新頭像
       const avatar = document.querySelector('.navbar .user-avatar');
       if(avatar){
@@ -388,6 +321,13 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
         return `<tr><td><strong>${r.name}</strong></td>${tds}</tr>`;
       }).join('');
     }
+
+    // 若你在別處有圖表/指標函式，這裡只是呼叫；沒有就不會報錯
+    async function buildYearMonthSelectors() {}
+    async function loadLast7DaysChart() {}
+    async function updateIncomeChart() {}
+    async function updateExpenseChart() {}
+    async function loadMetrics() {}
 
     // 初始化
     window.addEventListener('DOMContentLoaded', async ()=>{

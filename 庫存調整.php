@@ -125,11 +125,11 @@ $API_BASE_URL = '/lamian-ukn/api';
             </a>
             <div class="collapse" id="collapseLayouts" data-bs-parent="#sidenavAccordion">
               <nav class="sb-sidenav-menu-nested nav">
-                <a class="nav-link" href="員工資料表.html">員工資料表</a>
-                <a class="nav-link" href="班表管理.html">班表管理</a>
+                <a class="nav-link" href="員工資料表.php">員工資料表</a>
+                <a class="nav-link" href="班表管理.php">班表管理</a>
                 <a class="nav-link" href="日報表記錄.html">日報表記錄</a>
-                <a class="nav-link" href="假別管理.html">假別管理</a>
-                <a class="nav-link" href="打卡記錄.html">打卡紀錄</a>
+                <a class="nav-link" href="假別管理.php">假別管理</a>
+                <a class="nav-link" href="打卡管理.php">打卡管理</a>
                 <a class="nav-link" href="薪資管理.html">薪資管理</a>
               </nav>
             </div>
@@ -138,26 +138,26 @@ $API_BASE_URL = '/lamian-ukn/api';
               <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>營運管理
               <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
             </a>
-            <div class="collapse show" id="collapseOperation" data-bs-parent="#sidenavAccordion">
+            <div class="collapse" id="collapseOperation" data-bs-parent="#sidenavAccordion">
               <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionOperation">
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#operationCollapseInventory" aria-expanded="true">
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#operationCollapseInventory" aria-expanded="false">
                   庫存管理
                   <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                 </a>
-                <div class="collapse show" id="operationCollapseInventory" data-bs-parent="#sidenavAccordionOperation">
+                <div class="collapse" id="operationCollapseInventory" data-bs-parent="#sidenavAccordionOperation">
                   <nav class="sb-sidenav-menu-nested nav">
                     <a class="nav-link" href="庫存查詢.php">庫存查詢</a>
-                    <a class="nav-link active" href="庫存調整.php">庫存調整</a>
+                    <a class="nav-link" href="庫存調整.php">庫存調整</a>
                   </nav>
                 </div>
 
-                <a class="nav-link" href="日報表.html"><div class="sb-nav-link-icon"></div>日報表</a>
-                <a class="nav-link" href="薪資記錄.html"><div class="sb-nav-link-icon"></div>薪資記錄</a>
-                <a class="nav-link" href="班表.html"><div class="sb-nav-link-icon"></div>班表</a>
+                <a class="nav-link" href="日報表.html"><div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
+                <a class="nav-link" href="薪資管理.html"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
+                <a class="nav-link" href="班表.html"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
               </nav>
             </div>
 
-            <a class="nav-link" href="請假申請.html"><div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>請假申請</a>
+            <a class="nav-link" href="請假申請.php"><div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>請假申請</a>
 
             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseWebsite" aria-expanded="false">
               <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>網站管理
@@ -165,16 +165,16 @@ $API_BASE_URL = '/lamian-ukn/api';
             </a>
             <div class="collapse" id="collapseWebsite" data-bs-parent="#sidenavAccordion">
               <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionWebsite">
-                <a class="nav-link" href="layout-static.html">官網資料修改</a>
+                <a class="nav-link" href="layout-static.php">官網資料修改</a>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#websiteCollapseMember" aria-expanded="false">
                   會員管理
                   <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                 </a>
                 <div class="collapse" id="websiteCollapseMember" data-bs-parent="#sidenavAccordionWebsite">
                   <nav class="sb-sidenav-menu-nested nav">
-                    <a class="nav-link" href="member-list.html">會員清單</a>
-                    <a class="nav-link" href="member-detail.html">詳細資料頁</a>
-                    <a class="nav-link" href="point-manage.html">點數管理</a>
+                    <a class="nav-link" href="member-list.php">會員清單</a>
+                    <a class="nav-link" href="member-detail.php">詳細資料頁</a>
+                    <a class="nav-link" href="point-manage.php">點數管理</a>
                   </nav>
                 </div>
               </nav>
