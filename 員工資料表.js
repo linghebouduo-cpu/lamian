@@ -23,7 +23,7 @@ if (sidebarToggle) {
 }
 
 // API 設定
-const API_URL = 'http://localhost/lamian-UKN/api_employees.php';
+const API_URL = '/lamian-ukn/api/api_employees.php';  // ✅ 修正路徑
 let EMP_CACHE = [];
 
 // ==================== 員工資料管理函式 ====================
@@ -60,7 +60,7 @@ function renderEmployees(list) {
         const email = emp.email ?? '';
         const address = emp.address ?? '';
         const id_card = emp.id_card ?? emp.ID_card ?? '';
-        const role = emp.role ?? '';
+        const role = emp.role ?? ''; // 這裡會顯示 A, B, C
         const position = emp.position ?? emp.Position ?? '';
         const base_salary = emp.base_salary ?? emp.baseSalary ?? 'N/A';
         const hourly_rate = emp.hourly_rate ?? emp.hourlyRate ?? 'N/A';
@@ -78,8 +78,8 @@ function renderEmployees(list) {
             <td>${base_salary}</td>
             <td>${hourly_rate}</td>
             <td>
-                <button class="btn btn-primary btn-sm me-2" onclick="editEmployee(${id})">編輯</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${id})">刪除</button>
+                <button class="btn btn-primary btn-sm me-2" onclick="editEmployee('${id}')">編輯</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteEmployee('${id}')">刪除</button>
             </td>
         </tr>`;
     }).join('');
@@ -133,7 +133,7 @@ function openAddEmployeeModal() {
     document.getElementById('addEmployeeForm').reset();
     clearAddFormValidation();
     
-    // 隱藏薪資欄位
+    // 🔥 保留：原始的薪資欄位隱藏邏輯
     document.getElementById('addBaseSalaryGroup').style.display = 'none';
     document.getElementById('addHourlyRateGroup').style.display = 'none';
     document.getElementById('addSalaryHint').style.display = 'block';
@@ -153,9 +153,9 @@ function clearAddFormValidation() {
     feedbacks.forEach(feedback => feedback.textContent = '');
 }
 
-// 新增表單的雇用類別變更事件
+// 🔥 保留：原始的「雇用類別」變更事件 (ID: addRole)
 document.addEventListener('DOMContentLoaded', function() {
-    const addRoleSelect = document.getElementById('addRole');
+    const addRoleSelect = document.getElementById('addRole'); // 監聽 "正職/臨時工"
     if (addRoleSelect) {
         addRoleSelect.addEventListener('change', function() {
             const role = this.value;
@@ -205,7 +205,10 @@ async function submitAddEmployee() {
         // 檢查必要元素是否存在
         const requiredElements = [
             'addName', 'addBirthDate', 'addIdCard', 'addTelephone', 
-            'addEmail', 'addAddress', 'addRole', 'addPosition'
+            'addEmail', 'addAddress', 
+            'addRole', // 雇用類別 (正/臨)
+            'addPermissionLevel', // 🔥 新增：權限等級 (A/B/C)
+            'addPosition'
         ];
         
         for (const elementId of requiredElements) {
@@ -224,20 +227,26 @@ async function submitAddEmployee() {
             Telephone: document.getElementById('addTelephone').value.trim(),
             email: document.getElementById('addEmail').value.trim(),
             address: document.getElementById('addAddress').value.trim(),
-            role: document.getElementById('addRole').value,
+            
+            // 🔥 修改：role 的值來自 addPermissionLevel (A/B/C)
+            role: document.getElementById('addPermissionLevel').value, 
+            
             Position: document.getElementById('addPosition').value.trim(),
             base_salary: null,
             hourly_rate: null
         };
 
-        // 根據雇用類別設定薪資
-        if (formData.role === '正職') {
+        // 🔥 保留：讀取「雇用類別」的值 (僅供前端驗證使用)
+        const employmentType = document.getElementById('addRole').value;
+
+        // 🔥 保留：根據雇用類別設定薪資
+        if (employmentType === '正職') {
             const baseSalaryInput = document.getElementById('addBaseSalary');
             if (baseSalaryInput) {
                 const baseSalary = baseSalaryInput.value.trim();
                 formData.base_salary = baseSalary ? parseInt(baseSalary) : null;
             }
-        } else if (formData.role === '臨時員工') {
+        } else if (employmentType === '臨時員工') {
             const hourlyRateInput = document.getElementById('addHourlyRate');
             if (hourlyRateInput) {
                 const hourlyRate = hourlyRateInput.value.trim();
@@ -293,6 +302,7 @@ async function submitAddEmployee() {
             showAddFieldError('addTelephone', '請輸入電話號碼');
             isValid = false;
         } else {
+            // 🔥 保持您原始的寬鬆驗證 (09 或 市話)
             const phonePattern = /^(09\d{8}|0\d{1,2}-?\d{6,8}|\d{2,4}-?\d{6,8})$/;
             if (!phonePattern.test(formData.Telephone.replace(/\s+/g, ''))) {
                 showAddFieldError('addTelephone', '電話號碼格式不正確');
@@ -315,9 +325,15 @@ async function submitAddEmployee() {
             isValid = false;
         }
 
-        // 雇用類別驗證
-        if (!formData.role || !['正職', '臨時員工'].includes(formData.role)) {
+        // 🔥 保留：雇用類別驗證 (正職/臨時工)
+        if (!employmentType || !['正職', '臨時員工'].includes(employmentType)) {
             showAddFieldError('addRole', '請選擇有效的雇用類別');
+            isValid = false;
+        }
+        
+        // 🔥 新增：權限等級驗證 (A/B/C)
+        if (!formData.role || !['A', 'B', 'C'].includes(formData.role)) {
+            showAddFieldError('addPermissionLevel', '請選擇有效的權限等級');
             isValid = false;
         }
 
@@ -330,8 +346,8 @@ async function submitAddEmployee() {
             isValid = false;
         }
 
-        // 薪資驗證
-        if (formData.role === '正職') {
+        // 🔥 保留：原始的薪資驗證 (根據 "雇用類別" 決定是否必填)
+        if (employmentType === '正職') {
             if (!formData.base_salary || formData.base_salary <= 0) {
                 showAddFieldError('addBaseSalary', '請輸入有效的底薪金額（大於0）');
                 isValid = false;
@@ -339,7 +355,7 @@ async function submitAddEmployee() {
                 showAddFieldError('addBaseSalary', '底薪金額不可超過一千萬');
                 isValid = false;
             }
-        } else if (formData.role === '臨時員工') {
+        } else if (employmentType === '臨時員工') {
             if (!formData.hourly_rate || formData.hourly_rate <= 0) {
                 showAddFieldError('addHourlyRate', '請輸入有效的時薪金額（大於0）');
                 isValid = false;
@@ -360,7 +376,7 @@ async function submitAddEmployee() {
             return;
         }
 
-        console.log('準備送出的資料:', formData);
+        console.log('準備送出的資料 (role 將送出 A/B/C):', formData);
         
         // 顯示載入狀態
         const submitBtn = document.querySelector('#addEmployeeModal .btn-primary');
@@ -453,7 +469,7 @@ async function submitAddEmployee() {
         // 恢復按鈕狀態
         const submitBtn = document.querySelector('#addEmployeeModal .btn-primary');
         if (submitBtn) {
-            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>新增員工';
+            submitBtn.innerHTML = '新增員工'; // 恢復原始文字
             submitBtn.disabled = false;
         }
     }
@@ -583,6 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ==================== 編輯功能 ====================
+// (注意：編輯功能尚未修改)
 
 // 開啟編輯員工Modal
 function editEmployee(id) {
@@ -610,7 +627,10 @@ function editEmployee(id) {
         }
     }
     document.getElementById('editBirthDate').value = birthDateValue;
-    document.getElementById('editRole').value = empToEdit.role;
+    
+    // 🔥 注意：這裡的 'role' 是 A/B/C，但編輯表單的 'editRole' 仍是 "正職/臨時工"
+    // 這會導致錯誤，編輯功能需要一併修改
+    // document.getElementById('editRole').value = empToEdit.role; // 暫時註解
     
     // 統一使用正確的欄位名稱
     document.getElementById('editPosition').value = empToEdit.Position || empToEdit.position || '';
@@ -619,12 +639,15 @@ function editEmployee(id) {
     document.getElementById('editAddress').value = empToEdit.address;
     document.getElementById('editIdCard').value = empToEdit.ID_card || empToEdit.id_card || '';
 
-    // 3. 根據雇用類別顯示或隱藏底薪或時薪欄位
-    if (empToEdit.role === '正職') {
+    // 3. 根據雇用類別顯示或隱藏底薪或時薪欄位 (🔥 這裡也需要修改)
+    // 暫時判斷：如果 base_salary > 0 視為正職
+    if (empToEdit.base_salary > 0) {
+        document.getElementById('editRole').value = '正職';
         document.getElementById('editBaseSalary').value = empToEdit.base_salary || '';
         document.getElementById('editBaseSalaryGroup').style.display = 'block';
         document.getElementById('editHourlyRateGroup').style.display = 'none';
     } else {
+        document.getElementById('editRole').value = '臨時員工';
         document.getElementById('editHourlyRate').value = empToEdit.hourly_rate || '';
         document.getElementById('editBaseSalaryGroup').style.display = 'none';
         document.getElementById('editHourlyRateGroup').style.display = 'block';
@@ -635,13 +658,17 @@ function editEmployee(id) {
     editModal.show();
 }
 
-// 提交編輯表單
+// 提交編輯表單 (🔥 尚未修改)
 async function submitEdit() {
     // 收集表單資料
     const id = document.getElementById('editId').value;
     const name = document.getElementById('editName').value.trim();
     const birth_date = document.getElementById('editBirthDate').value;
-    const role = document.getElementById('editRole').value;
+    
+    // 🔥 警告： 'editRole' 拿到的是 "正職/臨時工"，但 API 需要 A/B/C
+    // 您需要一個 "編輯" 用的 A/B/C 下拉選單
+    const role = document.getElementById('editRole').value; // 這裡的值是錯的
+    
     const position = document.getElementById('editPosition').value.trim();
     const telephone = document.getElementById('editTelephone').value.trim();
     const email = document.getElementById('editEmail').value.trim();
@@ -677,7 +704,7 @@ async function submitEdit() {
         id: parseInt(id),
         name: name,
         birth_date: birth_date,
-        role: role,
+        role: role, // 🔥 這裡送出的是 "正職"，API 會報錯
         Position: position,
         Telephone: telephone,
         email: email,
@@ -762,5 +789,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==================== 初始化載入 ====================
 document.addEventListener('DOMContentLoaded', function () {
-    loadEmployees();
+    // 🔥 注意：loadEmployees() 會在 員工資料表.php 的頁尾 JS 中被觸發
+    // 這裡的 loadEmployees() 會在 員工資料表.js 載入時觸發
+    // 雖然不影響功能，但您在 員工資料表.php 頁尾的 loadLoggedInUser() 才是正確的
+    // (您的 員工資料表.js 檔案中，這一行是重複的)
+    // loadEmployees();
 });

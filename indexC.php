@@ -285,14 +285,27 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
 
       console.log('✅ C級員工已登入:', userName, 'ID:', userId);
 
+      // 設定用戶名
       el('loggedAs').textContent = userName;
       const navName = el('navUserName');
       if(navName) navName.textContent = userName;
 
-      // 更新頭像
-      const avatar = document.querySelector('.navbar .user-avatar');
-      if(avatar){
-        avatar.src = `https://i.pravatar.cc/40?u=${encodeURIComponent(userName)}`;
+      // 🔥 從 me.php 載入真實頭像
+      try {
+        const r = await fetch(API_BASE + '/me.php', {credentials:'include'});
+        if(r.ok) {
+          const data = await r.json();
+          if(data.avatar_url) {
+            const avatarUrl = data.avatar_url + (data.avatar_url.includes('?')?'&':'?') + 'v=' + Date.now();
+            const avatar = document.querySelector('.navbar .user-avatar');
+            if(avatar) {
+              avatar.src = avatarUrl;
+              console.log('✅ 頭像已更新:', avatarUrl);
+            }
+          }
+        }
+      } catch(e) {
+        console.warn('載入頭像失敗:', e);
       }
     }
 

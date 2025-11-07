@@ -1,19 +1,25 @@
 <?php
-// /lamian-ukn/假別管理.php
-// 登入保護（如未登入會被導回登入頁）
-require_once __DIR__ . '/api/auth_guard.php';
+// 🔥 新的 假別管理.php (頁面)
+// 🔥 已套用您系統的版型 (包含權限檢查)
 
-/**
- * 路徑設定
- * - $API_BASE_URL  ：統一放登入／審核等 API（例：/lamian-ukn/api）
- * - $DATA_BASE_URL ：統一放資料查詢 API（例：/lamian-ukn/首頁）
- * - $LEAVE_BASE_URL：本頁用到的「請假」相關 API 目錄（請依你的實際資料夾調整）
- *
- * 你可以依你的專案實際結構修改底下三個變數即可。
- */
-$API_BASE_URL   = '/lamian-ukn/api';
-$DATA_BASE_URL  = '/lamian-ukn/首頁';
-$LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假紀錄.php / 取得審核列表.php / review_leave.php」放在這裡
+require_once __DIR__ . '/includes/auth_check.php';
+
+// 只有 A 級（老闆）可以訪問
+if (!check_user_level('A', false)) {
+    show_no_permission_page(); // 會 exit
+}
+
+// 取得用戶資訊
+$user = get_user_info();
+$userName  = $user['name'];
+$userId    = $user['uid'];
+$userLevel = $user['level'];
+
+$pageTitle = '假別管理 - 員工管理系統'; // 標題
+
+// 統一路徑
+$API_BASE_URL  = '/lamian-ukn/api';
+$DATA_BASE_URL = '/lamian-ukn/首頁';
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -21,14 +27,15 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <title>假別管理 - 員工管理系統</title>
+  <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
   <link href="css/styles.css" rel="stylesheet" />
   <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
 
-  <style>
+<style>
+    /* ... (您在 假別管理.html (檔案 6) 中的 CSS 樣式表，保持不變) ... */
     :root {
       --primary-gradient: linear-gradient(135deg, #fbb97ce4 0%, #ff0000cb 100%);
       --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -62,6 +69,69 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
       -webkit-text-fill-color: transparent;
       text-shadow: none;
     }
+    
+    /* 🔥 修正：使用 員工資料表.php 的頂欄搜尋框樣式 */
+    .search-container-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+    }
+    .search-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50px;
+        padding: 4px 4px 4px 20px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        border: 2px solid transparent;
+    }
+    .search-container:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    .search-container:focus-within {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+    .search-input {
+        flex: 1;
+        border: none;
+        outline: none;
+        background: transparent;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: #fff;
+        font-weight: 500;
+    }
+    .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 400;
+    }
+    .search-btn {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+        border: none;
+        border-radius: 40px;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .search-btn:hover {
+        transform: scale(1.08);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+    .search-btn i {
+        color: #ff6b6b;
+        font-size: 16px;
+    }
+    .user-avatar{border:2px solid rgba(255,255,255,.5)}
+
     .sb-sidenav {
       background: linear-gradient(180deg, #fbb97ce4 0%, #ff00006a 100%) !important;
       box-shadow: var(--card-shadow);
@@ -156,18 +226,6 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
       background: rgba(227, 23, 111, 0.05);
       transform: scale(1.01);
     }
-    .sb-topnav .form-control {
-      border-radius: 25px;
-      border: 2px solid transparent;
-      background: rgba(255,255,255,.2);
-      color: #fff;
-    }
-    .sb-topnav .form-control:focus {
-      background: rgba(255,255,255,.3);
-      border-color: rgba(255,255,255,.5);
-      box-shadow: 0 0 20px rgba(255,255,255,.2);
-      color: #fff;
-    }
     .btn-primary {
       background: var(--primary-gradient);
       border: none;
@@ -177,36 +235,38 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
       transform: scale(1.05);
       box-shadow: 0 10px 25px rgba(209, 209, 209, 0.976);
     }
-  </style>
+</style>
 </head>
 
 <body class="sb-nav-fixed">
   <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-    <a class="navbar-brand ps-3" href="index.php">員工管理系統</a>
-    <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" type="button">
-      <i class="fas fa-bars"></i>
-    </button>
+      <a class="navbar-brand ps-3" href="index.php">員工管理系統</a>
+      <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
 
-    <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-      <div class="input-group">
-        <input class="form-control" type="text" placeholder="Search for..." aria-label="Search" />
-        <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
-      </div>
-    </form>
+      <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+          <div class="search-container-wrapper">
+              <div class="search-container">
+                  <input class="search-input" type="text" placeholder="搜尋員工、班表、薪資..." aria-label="Search" />
+                  <button class="search-btn" id="btnNavbarSearch" type="button">
+                      <i class="fas fa-search"></i>
+                  </button>
+              </div>
+          </div>
+      </form>
 
-    <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="fas fa-user fa-fw"></i>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-          <li><a class="dropdown-item" href="設定.php">Settings</a></li>
-          <li><a class="dropdown-item" href="活動紀錄.php">Activity Log</a></li>
-          <li><hr class="dropdown-divider" /></li>
-          <li><a class="dropdown-item" href="<?= htmlspecialchars($API_BASE_URL) ?>/logout.php">Logout</a></li>
-        </ul>
-      </li>
-    </ul>
+      <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+          <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <img class="user-avatar rounded-circle me-1" src="https://i.pravatar.cc/40?u=<?php echo urlencode($userName); ?>" width="28" height="28" alt="User Avatar" style="vertical-align:middle;">
+                  <span id="navUserName"><?php echo htmlspecialchars($userName); ?></span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="帳號設置.php">帳號設置</a></li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li><a class="dropdown-item" href="logout.php"><i class="fas fa-right-from-bracket me-2"></i>登出</a></li>
+              </ul>
+          </li>
+      </ul>
   </nav>
 
   <div id="layoutSidenav">
@@ -220,18 +280,18 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
             </a>
 
             <div class="sb-sidenav-menu-heading">Pages</div>
-            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false">
+            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="true">
               <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>人事管理
               <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
             </a>
-            <div class="collapse" id="collapseLayouts" data-bs-parent="#sidenavAccordion">
+            <div class="collapse show" id="collapseLayouts" data-bs-parent="#sidenavAccordion">
               <nav class="sb-sidenav-menu-nested nav">
                 <a class="nav-link" href="員工資料表.php">員工資料表</a>
                 <a class="nav-link" href="班表管理.php">班表管理</a>
                 <a class="nav-link" href="日報表記錄.php">日報表記錄</a>
                 <a class="nav-link active" href="假別管理.php">假別管理</a>
-                <a class="nav-link" href="打卡記錄.php">打卡紀錄</a>
-                <a class="nav-link" href="薪資管理.php">薪資管理</a>
+                <a class="nav-link" href="打卡管理.php">打卡管理</a>
+                <a class="nav-link" href="薪資管理.html">薪資管理</a>
               </nav>
             </div>
 
@@ -251,10 +311,9 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
                     <a class="nav-link" href="庫存調整.php">庫存調整</a>
                   </nav>
                 </div>
-
-                <a class="nav-link" href="日報表.php"><div class="sb-nav-link-icon"></div>日報表</a>
-                <a class="nav-link" href="薪資記錄.php"><div class="sb-nav-link-icon"></div>薪資記錄</a>
-                <a class="nav-link" href="班表.php"><div class="sb-nav-link-icon"></div>班表</a>
+                <a class="nav-link" href="日報表.php"> <div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
+                <a class="nav-link" href="薪資管理.html"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
+                <a class="nav-link" href="班表.html"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
               </nav>
             </div>
 
@@ -282,14 +341,13 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
             </div>
 
             <div class="sb-sidenav-menu-heading">Addons</div>
-            <a class="nav-link" href="charts.php"><div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>Charts</a>
-            <a class="nav-link" href="tables.php"><div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>Tables</a>
+            <a class="nav-link" href="charts.html"><div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>Charts</a>
           </div>
         </div>
 
         <div class="sb-sidenav-footer">
-          <div class="small">Logged in as:</div>
-          Start Bootstrap
+            <div class="small">Logged in as:</div>
+            <span id="loggedAs"><?php echo htmlspecialchars($userName); ?></span>
         </div>
       </nav>
     </div>
@@ -372,9 +430,13 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
       <footer class="py-4 bg-light mt-auto">
         <div class="container-fluid px-4">
           <div class="d-flex align-items-center justify-content-between small">
-            <div class="text-muted">Copyright &copy; Xxing0625</div>
+            <div class="text-muted">© 2024 令和博多餐廳管理系統 - Xxing0625</div>
             <div>
-              <a href="#">Privacy Policy</a> &middot; <a href="#">Terms &amp; Conditions</a>
+              <a href="#" class="text-decoration-none">隱私政策</a>
+              <span class="mx-2">•</span>
+              <a href="#" class="text-decoration-none">使用條款</a>
+              <span class="mx-2">•</span>
+              <a href="#" class="text-decoration-none">技術支援</a>
             </div>
           </div>
         </div>
@@ -383,12 +445,11 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  
   <script>
-    // 後端路徑（從 PHP 注入）
-    const API_BASE_URL   = <?= json_encode($API_BASE_URL) ?>;
-    const DATA_BASE_URL  = <?= json_encode($DATA_BASE_URL) ?>;
-    const LEAVE_BASE_URL = <?= json_encode($LEAVE_BASE_URL) ?>;
-
+    // 🔥 PHP 變數注入 (給 JS 使用)
+    const API_BASE  = <?php echo json_encode($API_BASE_URL, JSON_UNESCAPED_SLASHES); ?>;
+    
     // 日期顯示與側欄收合
     document.getElementById('currentDate').textContent =
       new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
@@ -403,6 +464,7 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
       a.classList.remove('d-none');
       setTimeout(() => a.classList.add('d-none'), 5000);
     }
+
     function showSuccess(msg){
       const a = document.getElementById('successAlert');
       document.getElementById('successMessage').textContent = msg;
@@ -418,11 +480,12 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
       return `<span class="badge bg-warning text-dark">未審核</span>`;
     }
 
-    // 取得員工請假紀錄
+    // 載入員工請假紀錄
     async function loadAllLeave(){
       const tbody = document.getElementById('allLeaveTable');
       try{
-        const res = await fetch(`${LEAVE_BASE_URL}/取得請假紀錄.php`, { credentials: 'include' });
+        // 🔥 修正：API 路徑
+        const res = await fetch(API_BASE + '/取得請假紀錄.php');
         if(!res.ok) throw new Error(res.status + ' ' + res.statusText);
         const data = await res.json();
         tbody.innerHTML = (data || []).map(item => `
@@ -435,17 +498,18 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
             <td>${statusBadge(item.status)}</td>
           </tr>`).join('') || `<tr><td colspan="6" class="text-muted">目前沒有資料</td></tr>`;
       }catch(e){
-        console.warn(e);
-        tbody.innerHTML = `<tr><td colspan="6" class="text-danger">載入失敗</td></tr>`;
+        console.warn(e); 
+        tbody.innerHTML = `<tr><td colspan="6" class="text-danger">載入失敗</td></tr>`; 
         showError('無法載入員工請假紀錄');
       }
     }
 
-    // 取得審核列表
+    // 載入請假審核列表
     async function loadLeaveReview(){
       const tbody = document.getElementById('leaveReviewTable');
       try{
-        const res = await fetch(`${LEAVE_BASE_URL}/取得審核列表.php`, { credentials: 'include' });
+        // 🔥 修正：API 路徑
+        const res = await fetch(API_BASE + '/取得審核列表.php');
         if(!res.ok) throw new Error(res.status + ' ' + res.statusText);
         const data = await res.json();
         tbody.innerHTML = (data || []).map(item => `
@@ -463,65 +527,124 @@ $LEAVE_BASE_URL = '/lamian-ukn/假別管理'; // ⬅️ 建議把「取得請假
             </td>
           </tr>`).join('') || `<tr><td colspan="8" class="text-muted">目前沒有待審核項目</td></tr>`;
       }catch(e){
-        console.warn(e);
-        tbody.innerHTML = `<tr><td colspan="8" class="text-danger">載入失敗</td></tr>`;
+        console.warn(e); 
+        tbody.innerHTML = `<tr><td colspan="8" class="text-danger">載入失敗</td></tr>`; 
         showError('無法載入審核列表');
       }
     }
 
-    // 審核確認
+    // 審核確認對話框
     function confirmReview(id, action){
-      const message = action === 'approve' ? '確定通過這筆請假嗎？' : '確定駁回這筆請假嗎？';
-      if(confirm(message)) reviewLeave(id, action);
+      let message = '';
+      if(action === 'approve') {
+        message = '確定通過這筆請假嗎？';
+      } else if(action === 'reject') {
+        message = '確定駁回這筆請假嗎？';
+      }
+      
+      const ok = confirm(message);
+      if(!ok) return;
+      
+      reviewLeave(id, action);
     }
 
-    // 送審核 API
+    // 審核 API 呼叫
     async function reviewLeave(id, action){
       try{
-        const res = await fetch(`${LEAVE_BASE_URL}/review_leave.php`, {
-          method: 'POST',
+        // 🔥 修正：API 路徑
+        const res = await fetch(API_BASE + '/review_leave.php', {
+          method: 'POST', 
           headers: {'Content-Type': 'application/json'},
-          credentials: 'include',
-          body: JSON.stringify({ leaveId: id, action })
+          body: JSON.stringify({ 
+            leaveId: id,
+            action: action
+          })
         });
-
+        
         const text = await res.text();
-        if(!res.ok){
-          try{
-            const err = JSON.parse(text);
-            showError(err.error || '審核操作失敗');
-          }catch{
+        console.log('Response:', text);
+        
+        if(!res.ok) {
+          try {
+            const errorData = JSON.parse(text);
+            console.error('Error details:', errorData);
+            showError(errorData.error || '審核操作失敗');
+          } catch(e) {
+            console.error('Raw error:', text);
             showError('審核操作失敗: ' + text);
           }
           return;
         }
-
-        try{
+        
+        try {
           const result = JSON.parse(text);
-          let msg = result.message || '操作成功';
-          if(result.emailSent === false){
-            msg += ' ⚠️ (Email 通知發送失敗: ' + (result.emailMessage || '未知錯誤') + ')';
-          }else if(result.emailSent === true){
-            msg += ' ✅ (已發送通知信)';
+          console.log('Success result:', result);
+          
+          let message = result.message || '操作成功';
+          
+          if(result.emailSent === false) {
+            message += ' ⚠️ (Email 通知發送失敗: ' + result.emailMessage + ')';
+            console.warn('Email failed:', result.emailMessage);
+          } else if(result.emailSent === true) {
+            message += ' ✅ (已發送通知信)';
           }
-          showSuccess(msg);
-        }catch{
+          
+          showSuccess(message);
+        } catch(e) {
           showSuccess(text || '操作成功');
         }
-
+        
         await Promise.all([loadLeaveReview(), loadAllLeave()]);
+        
       }catch(e){
-        console.error(e);
+        console.error('Fetch error:', e);
         showError('審核操作失敗: ' + e.message);
       }
     }
 
+    // 🔥 PHP 頁尾注入 (取代 HTML 的 DOMContentLoaded)
+    const el = id => document.getElementById(id);
+
+    // 取得登入者資訊（已從 PHP Session 取得）
+    async function loadLoggedInUser(){
+        const userName = <?php echo json_encode($userName, JSON_UNESCAPED_UNICODE); ?>;
+        const userId = <?php echo json_encode($userId, JSON_UNESCAPED_UNICODE); ?>;
+        
+        console.log('✅ 假別管理 已登入:', userName, 'ID:', userId);
+        
+        // 設定用戶名 (Sidenav footer)
+        const loggedAsEl = el('loggedAs');
+        if (loggedAsEl) loggedAsEl.textContent = userName;
+
+        // 設定用戶名 (Navbar)
+        const navName = el('navUserName');
+        if(navName) navName.textContent = userName;
+        
+        // 從 me.php 載入真實頭像
+        try {
+            const r = await fetch(API_BASE + '/me.php', {credentials:'include'});
+            if(r.ok) {
+            const data = await r.json();
+            if(data.avatar_url) {
+                const avatarUrl = data.avatar_url + (data.avatar_url.includes('?')?'&':'?') + 'v=' + Date.now();
+                const avatar = document.querySelector('.navbar .user-avatar');
+                if(avatar) {
+                    avatar.src = avatarUrl;
+                    console.log('✅ 頭像已更新:', avatarUrl);
+                }
+            }
+            }
+        } catch(e) {
+            console.warn('載入頭像失敗:', e);
+        }
+    }
+
     // 初始化
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadLoggedInUser();
       loadAllLeave();
       loadLeaveReview();
     });
   </script>
-  <script src="js/scripts.js"></script>
-</body>
+  </body>
 </html>

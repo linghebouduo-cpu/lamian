@@ -247,10 +247,10 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
               <nav class="sb-sidenav-menu-nested nav">
                 <a class="nav-link" href="員工資料表.php">員工資料表</a>
                 <a class="nav-link" href="班表管理.php">班表管理</a>
-                <a class="nav-link" href="日報表記錄.html">日報表記錄</a>
+                <a class="nav-link" href="日報表記錄.php">日報表記錄</a>
                 <a class="nav-link" href="假別管理.php">假別管理</a>
                 <a class="nav-link" href="打卡管理.php">打卡管理</a>
-                <a class="nav-link" href="薪資管理.html">薪資管理</a>
+                <a class="nav-link" href="薪資管理.php">薪資管理</a>
               </nav>
             </div>
 
@@ -271,9 +271,9 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
                   </nav>
                 </div>
 
-                <a class="nav-link" href="日報表.html"><div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
-                <a class="nav-link" href="薪資管理.html"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
-                <a class="nav-link" href="班表.html"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
+                <a class="nav-link" href="日報表.php"><div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
+                <a class="nav-link" href="薪資管理.php"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
+                <a class="nav-link" href="班表.php"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
               </nav>
             </div>
 
@@ -459,21 +459,34 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
 
     // 取得登入者資訊（已從 PHP Session 取得）
     async function loadLoggedInUser(){
-      // 🔥 使用 PHP 傳遞的用戶資訊，不需要呼叫 API
+      // 🔥 使用 PHP 傳遞的用戶資訊
       const userName = <?php echo json_encode($userName, JSON_UNESCAPED_UNICODE); ?>;
       const userId = <?php echo json_encode($userId, JSON_UNESCAPED_UNICODE); ?>;
       
       console.log('✅ A級老闆已登入:', userName, 'ID:', userId);
       
-      // PHP 已經設定好顯示了，這裡只是確認
+      // 設定用戶名
       el('loggedAs').textContent = userName;
       const navName = el('navUserName');
       if(navName) navName.textContent = userName;
       
-      // 更新頭像
-      const avatar = document.querySelector('.navbar .user-avatar');
-      if(avatar){
-        avatar.src = `https://i.pravatar.cc/40?u=${encodeURIComponent(userName)}`;
+      // 🔥 從 me.php 載入真實頭像
+      try {
+        const r = await fetch(API_BASE + '/me.php', {credentials:'include'});
+        if(r.ok) {
+          const data = await r.json();
+          if(data.avatar_url) {
+            const avatarUrl = data.avatar_url + (data.avatar_url.includes('?')?'&':'?') + 'v=' + Date.now();
+            const avatar = document.querySelector('.navbar .user-avatar');
+            if(avatar) {
+              avatar.src = avatarUrl;
+              console.log('✅ 頭像已更新:', avatarUrl);
+            }
+          }
+        }
+      } catch(e) {
+        console.warn('載入頭像失敗:', e);
+        // 即使失敗也不影響其他功能
       }
     }
 
