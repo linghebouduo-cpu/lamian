@@ -268,6 +268,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
                   <nav class="sb-sidenav-menu-nested nav">
                     <a class="nav-link" href="庫存查詢.php">庫存查詢</a>
                     <a class="nav-link" href="庫存調整.php">庫存調整</a>
+                    <a class="nav-link" href="商品管理.php">商品管理</a>
                   </nav>
                 </div>
 
