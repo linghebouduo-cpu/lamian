@@ -379,7 +379,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
           <div class="card p-3 mb-4">
             <div class="card-header"><i class="fas fa-list me-2"></i>員工請假紀錄</div>
             <div class="card-body">
-              <div class="table-responsive">
+              <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-bordered table-hover text-center align-middle">
                   <thead>
                     <tr>
