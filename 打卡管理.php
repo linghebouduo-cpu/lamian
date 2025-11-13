@@ -140,7 +140,7 @@ $API_BASE_URL = '/lamian-ukn/api';
                 <a class="nav-link" href="員工資料表.php">員工資料表</a>
                 <a class="nav-link" href="班表管理.php">班表管理</a>
                 <a class="nav-link" href="日報表記錄.html">日報表記錄</a>
-                <a class="nav-link" href="假別管理.php">假別管理</a>
+                <a class="nav-link" href="假別管理.html">假別管理</a>
                 <a class="nav-link" href="打卡管理.php">打卡管理</a>
                 <a class="nav-link" href="薪資管理.html">薪資管理</a>
               </nav>
@@ -595,14 +595,14 @@ $API_BASE_URL = '/lamian-ukn/api';
       const payload = {
         id:        (document.getElementById('f_id').value||'') || undefined,
         date:      document.getElementById('f_date').value,
-        emp_id:    document.getElementById('f_emp_id').value.trim(),
+        user_id:    document.getElementById('f_emp_id').value.trim(),
         clock_in:  document.getElementById('f_clock_in').value || null,
         clock_out: document.getElementById('f_clock_out').value || null,
         status:    document.getElementById('f_status').value || '',
         note:      document.getElementById('f_note').value.trim()
       };
       if(!payload.date)   return showErr('請填 日期');
-      if(!payload.emp_id) return showErr('請填 員工編號');
+      if(!payload.user_id) return showErr('請填 員工編號');
 
       try{
         const r = await fetch(API_ADMIN_SAVE, {

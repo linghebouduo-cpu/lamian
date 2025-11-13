@@ -426,7 +426,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
       <footer class="py-4 bg-light mt-auto">
         <div class="container-fluid px-4">
           <div class="d-flex align-items-center justify-content-between small">
-            <div class="text-muted">© 2024 令和博多餐廳管理系統 - Xxing0625</div>
+            <div class="text-muted">© 2025 拉麵店經營系統 - ukn</div>
             <div>
               <a href="#" class="text-decoration-none">隱私政策</a>
               <span class="mx-2">•</span>

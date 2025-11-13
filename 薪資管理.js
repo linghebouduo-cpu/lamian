@@ -29,7 +29,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadSalaryData(month, keyword = "") {
     showLoading(true);
     try {
-      const res = await fetch("薪資管理.php", {
+      // [!! 關鍵修改 !!]
+      const res = await fetch("薪資管理_api.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "fetch", month, keyword })
@@ -67,28 +68,69 @@ document.addEventListener("DOMContentLoaded", () => {
       const deductions = rec.deductions ?? 0;
       const totalSalary = rec.total_salary ?? 0;
 
+      // 轉義字串,避免特殊字元導致錯誤
+      const escapeHtml = (str) => {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      };
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${rec.id}</td>
-        <td>${rec.name}</td>
-        <td>${rec.salary_month}</td>
-        <td><span class="badge bg-info text-dark">${payType}</span></td>
+        <td>${escapeHtml(rec.id)}</td>
+        <td>${escapeHtml(rec.name)}</td>
+        <td>${escapeHtml(rec.salary_month)}</td>
+        <td><span class="badge bg-info text-dark">${escapeHtml(payType)}</span></td>
         <td>${payValue}</td>
         <td>${workingHours}</td>
         <td>${bonus}</td>
         <td>${deductions}</td>
         <td>${totalSalary}</td>
         <td class="text-center">
-          <button class="btn btn-sm btn-info me-2" onclick="showDetail(${rec.id}, '${rec.salary_month}')">
+          <button class="btn btn-sm btn-info me-2" data-action="detail" data-id="${escapeHtml(rec.id)}" data-month="${escapeHtml(rec.salary_month)}">
             <i class="fas fa-eye"></i>
           </button>
-          <button class="btn btn-sm btn-warning" onclick="openEditModal(${rec.id}, '${rec.name}', '${rec.salary_month}', '${payType}', '${payValue}', '${workingHours}', '${bonus}', '${deductions}')">
+          <button class="btn btn-sm btn-warning" data-action="edit" 
+            data-id="${escapeHtml(rec.id)}" 
+            data-name="${escapeHtml(rec.name)}" 
+            data-month="${escapeHtml(rec.salary_month)}" 
+            data-paytype="${escapeHtml(payType)}" 
+            data-payvalue="${payValue}" 
+            data-hours="${workingHours}" 
+            data-bonus="${bonus}" 
+            data-deduction="${deductions}">
             <i class="fas fa-edit"></i>
           </button>
         </td>
       `;
       salaryTableBody.appendChild(tr);
     });
+
+    // 使用事件委派來處理按鈕點擊
+    salaryTableBody.addEventListener('click', handleTableClick);
+  }
+
+  // ===== 處理表格按鈕點擊事件 =====
+  function handleTableClick(e) {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    
+    if (action === 'detail') {
+      showDetail(btn.dataset.id, btn.dataset.month);
+    } else if (action === 'edit') {
+      openEditModal(
+        btn.dataset.id,
+        btn.dataset.name,
+        btn.dataset.month,
+        btn.dataset.paytype,
+        btn.dataset.payvalue,
+        btn.dataset.hours,
+        btn.dataset.bonus,
+        btn.dataset.deduction
+      );
+    }
   }
 
   // ===== 更新統計卡片 =====
@@ -125,7 +167,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== 顯示詳細資料 =====
   window.showDetail = async function (id, month) {
     try {
-      const res = await fetch("薪資管理.php", {
+      // [!! 關鍵修改 !!]
+      const res = await fetch("薪資管理_api.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "detail", id, month })
@@ -135,19 +178,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const d = data.record;
       document.getElementById("detailBody").innerHTML = `
-        <p><strong>員工ID：</strong>${d.id}</p>
-        <p><strong>姓名：</strong>${d.name}</p>
-        <p><strong>薪資月份：</strong>${d.salary_month}</p>
-        <p><strong>薪資類型：</strong>${d.salary_type}</p>
-        <p><strong>底薪/時薪：</strong>${d.base_salary || d.hourly_rate}</p>
-        <p><strong>本月工時：</strong>${d.working_hours}</p>
-        <p><strong>獎金：</strong>${d.bonus}</p>
-        <p><strong>扣款：</strong>${d.deductions}</p>
-        <p><strong>實領金額：</strong>${d.total_salary}</p>
+        <p><strong>員工ID:</strong>${d.id}</p>
+        <p><strong>姓名:</strong>${d.name}</p>
+        <p><strong>薪資月份:</strong>${d.salary_month}</p>
+        <p><strong>薪資類型:</strong>${d.salary_type}</p>
+        <p><strong>底薪/時薪:</strong>${d.base_salary || d.hourly_rate}</p>
+        <p><strong>本月工時:</strong>${d.working_hours}</p>
+        <p><strong>獎金:</strong>${d.bonus}</p>
+        <p><strong>扣款:</strong>${d.deductions}</p>
+        <p><strong>實領金額:</strong>${d.total_salary}</p>
       `;
       new bootstrap.Modal(document.getElementById("detailModal")).show();
     } catch (err) {
-      alert("讀取詳情失敗：" + err.message);
+      alert("讀取詳情失敗:" + err.message);
     }
   };
 
@@ -181,21 +224,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateTotalSalary();
 
-    // 顯示 Modal，確保使用 Bootstrap 的 show 方法顯示，並自動處理 aria-hidden
+    // 顯示 Modal,確保使用 Bootstrap 的 show 方法顯示,並自動處理 aria-hidden
     const modal = new bootstrap.Modal(document.getElementById("editModal"));
     modal.show(); // 使用 Bootstrap Modal 顯示方法
 
-    // 設置焦點，確保焦點在顯示的 Modal 中
+    // 設置焦點,確保焦點在顯示的 Modal 中
     document.getElementById("edit_working_hours").focus();
   };
 
-  // ===== 顯示 Modal 時，確保 aria-hidden 被正確處理 =====
+  // ===== 顯示 Modal 時,確保 aria-hidden 被正確處理 =====
   document.getElementById("editModal").addEventListener('shown.bs.modal', () => {
     const modalElement = document.getElementById("editModal");
     modalElement.setAttribute("aria-hidden", "false");
   });
 
-  // ===== 隱藏 Modal 時，確保 aria-hidden 被設置 =====
+  // ===== 隱藏 Modal 時,確保 aria-hidden 被設置 =====
   document.getElementById("editModal").addEventListener('hidden.bs.modal', () => {
     const modalElement = document.getElementById("editModal");
     modalElement.setAttribute("aria-hidden", "true");
@@ -243,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (deductionInput.value != editOriginal.deductions) confirmMsg += `扣款: ${editOriginal.deductions} → ${deductionInput.value}\n`;
 
     if (confirmMsg) {
-      if (!confirm("確定要修改以下欄位嗎？\n" + confirmMsg)) return;
+      if (!confirm("確定要修改以下欄位嗎?\n" + confirmMsg)) return;
     } else {
       alert("未修改任何欄位。");
       return;
@@ -259,7 +302,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const res = await fetch("薪資管理.php", {
+      // [!! 關鍵修改 !!]
+      const res = await fetch("薪資管理_api.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
@@ -267,15 +311,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await res.json();
 
       if (result.success) {
-        alert("薪資資料已更新！");
+        alert("薪資資料已更新!");
         bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
         loadSalaryData(monthPicker.value);
       } else {
-        alert("更新失敗：" + result.message);
+        alert("更新失敗:" + result.message);
       }
     } catch (err) {
       console.error("更新錯誤", err);
-      alert("伺服器錯誤，請稍後再試");
+      alert("伺服器錯誤,請稍後再試");
     }
   };
 

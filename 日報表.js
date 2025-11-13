@@ -52,9 +52,7 @@ const dailyReportForm = document.getElementById("dailyReportForm");
 // ===== 初始化日期與星期 =====
 function formatDate(date) {
   const y = date.getFullYear();
-  // 🔥 修正：加上 + 號
   const m = ("0" + (date.getMonth() + 1)).slice(-2);
-  // 🔥 修正：加上 + 號
   const d = ("0" + date.getDate()).slice(-2);
   return `${y}-${m}-${d}`;
 }
@@ -68,6 +66,49 @@ const today = new Date();
 if (currentDateEl) currentDateEl.textContent = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
 if (reportDate) reportDate.value = formatDate(today); //
 if (weekdayInput) weekdayInput.value = getWeekday(today);
+
+
+// 🔥 ================== 修正開始 ================== 🔥
+/**
+ * 自動填入「填表人」欄位
+ * 從 Navbar 或 Sidebar 抓取已登入的用戶名稱
+ */
+function autoFillUserName() {
+    // 檢查「填表人」欄位是否存在
+    if (!filledBy) {
+        console.warn("在日報表頁面找不到 'filled_by' 欄位。");
+        return;
+    }
+
+    // 嘗試從 Navbar (頂部) 或 Sidenav (側邊欄) 獲取已登入的用戶名
+    // (這對應您其他頁面版型中的 ID)
+    const navUser = document.getElementById("navUserName");
+    const sidebarUser = document.getElementById("loggedAs");
+    
+    let userName = "";
+    
+    if (navUser && navUser.textContent) {
+        userName = navUser.textContent.trim();
+    } else if (sidebarUser && sidebarUser.textContent) {
+        userName = sidebarUser.textContent.trim();
+    }
+    
+    // 如果成功抓到名稱，就填入 input 欄位
+    if (userName && userName !== "訪客") {
+        filledBy.value = userName;
+        console.log("已自動填入填表人：" + userName);
+        
+        // (可選) 您可以取消註解下一行，讓「填表人」欄位變成唯讀，防止修改
+        // filledBy.readOnly = true; 
+    } else {
+        console.warn("無法從 navUserName 或 loggedAs 獲取用戶名稱，請手動填寫「填表人」。");
+    }
+}
+
+// 🔥 立即執行自動填入
+autoFillUserName();
+// 🔥 ================== 修正結束 ================== 🔥
+
 
 // ===== 收入總計 =====
 function calculateIncome() {
@@ -284,7 +325,7 @@ if (dailyReportForm) {
     const data = {
       report_date: reportDate.value,
       weekday: weekdayInput.value,
-      filled_by: filledBy.value,
+      filled_by: filledBy.value, // 🔥 這格現在會由 autoFillUserName() 填入
       cash_income: parseFloat(document.getElementById("cash_income").value) || 0,
       linepay_income: parseFloat(document.getElementById("linepay_income").value) || 0,
       uber_income: parseFloat(document.getElementById("uber_income").value) || 0,
@@ -315,7 +356,7 @@ if (dailyReportForm) {
       const checkRes = await fetch(`${API_BASE}/api_report_check.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data) // 🔥 data 物件現在包含 filled_by
       });
       const checkResult = await checkRes.json();
 
@@ -328,7 +369,7 @@ if (dailyReportForm) {
       const saveRes = await fetch(`${API_BASE}/api_report_create.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data) // 🔥 data 物件現在包含 filled_by
       });
       const saveResult = await saveRes.json();
 
@@ -338,6 +379,10 @@ if (dailyReportForm) {
         const today = new Date();
         reportDate.value = formatDate(today);
         weekdayInput.value = getWeekday(today);
+        
+        // 🔥 修正：重設表單後，再次自動填入用戶名
+        autoFillUserName(); 
+        
         updateKPI();
       } else {
         showAlert("error", saveResult.message || "資料儲存失敗");
@@ -347,6 +392,3 @@ if (dailyReportForm) {
     }
   });
 }
-
-// 🔥 移除：初始化 updateKPI() (改由 PHP 頁尾的 DOMContentLoaded 觸發)
-// updateKPI();

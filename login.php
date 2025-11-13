@@ -59,6 +59,13 @@ $API_BASE = '/lamian-ukn/api';
     .alert-success { background: #f0fdf4; color: #166534; border-left: 4px solid #22c55e; }
     .alert-danger { background: #fef2f2; color: #991b1b; border-left: 4px solid #ef4444; }
     .spinner-border { width: 1em; height: 1em; }
+    
+    /* [!! 新增 !!] Modal 中的 Input 樣式 */
+    .modal-body .input-group-icon .form-control { padding-left: 48px; }
+    /* [!! 新增 !!] 多步驟 Modal 樣式 */
+    .step-pane { display: none; }
+    .step-pane.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
 </head>
 <body>
@@ -98,16 +105,74 @@ $API_BASE = '/lamian-ukn/api';
   </div>
 </div>
 
-<!-- 忘記密碼 Modal (保持原樣) -->
-<div class="modal fade" id="fpModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="fpModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">重設密碼</h5>
+        <h5 class="modal-title" id="fpModalTitle">重設密碼 (步驟 1/3)</h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p class="text-center">忘記密碼功能維護中...</p>
+        <div id="fpMsg" class="alert d-none"></div>
+
+        <div id="step1" class="step-pane active">
+          <p class="text-muted small mb-3">請輸入您的員工帳號（ID或身分證字號）。系統將會發送一封密碼重設郵件到您登記的電子信箱。</p>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-person"></i> 您的帳號</label>
+            <div class="input-group-icon">
+              <i class="bi bi-person"></i>
+              <input id="fpAccount" class="form-control" placeholder="輸入員工ID或身分證字號">
+            </div>
+          </div>
+        </div>
+
+        <div id="step2" class="step-pane">
+          <p class="text-muted small mb-3">我們已發送一組 6 位數驗證碼到您的信箱，請檢查並輸入：</p>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-shield-check"></i> 6 位數驗證碼</label>
+            <div class="input-group-icon">
+              <i class="bi bi-shield-check"></i>
+              <input id="fpCode" class="form-control" placeholder="輸入 6 位數驗證碼" maxlength="6">
+            </div>
+          </div>
+        </div>
+
+        <div id="step3" class="step-pane">
+           <p class="text-muted small mb-3">驗證成功！請設定您的新密碼（至少 6 碼）。</p>
+           <div class="mb-3">
+            <label class="form-label"><i class="bi bi-lock-fill"></i> 新密碼</label>
+            <div class="input-group-icon">
+              <i class="bi bi-lock-fill"></i>
+              <input id="fpNewPass" type="password" class="form-control" placeholder="輸入新密碼 (至少 6 碼)">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-lock-fill"></i> 確認新密碼</label>
+            <div class="input-group-icon">
+              <i class="bi bi-lock-fill"></i>
+              <input id="fpConfirmPass" type="password" class="form-control" placeholder="再次輸入新密碼">
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <div id="footerStep1" class="w-100">
+          <button type="button" class="btn btn-primary w-100" id="btnSendCode">
+            <i class="bi bi-send me-2"></i>發送驗證碼
+          </button>
+        </div>
+        <div id="footerStep2" class="w-100 d-none">
+          <button type="button" class="btn btn-secondary" id="btnBackToStep1">返回</button>
+          <button type="button" class="btn btn-primary" id="btnVerifyCode">
+            <i class="bi bi-check-circle me-2"></i>驗證
+          </button>
+        </div>
+        <div id="footerStep3" class="w-100 d-none">
+          <button type="button" class="btn btn-success w-100" id="btnDoReset">
+            <i class="bi bi-save me-2"></i>儲存新密碼
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -117,6 +182,11 @@ $API_BASE = '/lamian-ukn/api';
 <script>
 // --- API Endpoints ---
 const API_LOGIN = <?php echo json_encode($API_BASE . '/password_login.php'); ?>;
+// [!! 新增 !!] 忘記密碼 API 端點
+const API_FORGOT_REQUEST = <?php echo json_encode($API_BASE . '/password_request.php'); ?>;
+const API_FORGOT_VERIFY = <?php echo json_encode($API_BASE . '/password_verify.php'); ?>;
+const API_FORGOT_RESET = <?php echo json_encode($API_BASE . '/password_reset.php'); ?>;
+
 
 // --- Helper Functions ---
 const $ = s => document.querySelector(s);
@@ -129,7 +199,7 @@ function showMsg(el, text, ok=false){
   el.className = 'alert ' + (ok ? 'alert-success' : 'alert-danger');
   el.textContent = text;
   el.classList.remove('d-none');
-  setTimeout(() => el.classList.add('d-none'), ok ? 2200 : 4200);
+  setTimeout(() => el.classList.add('d-none'), ok ? 3000 : 4200);
 }
 
 // --- Login Logic ---
@@ -206,6 +276,215 @@ $('#btnLogin').addEventListener('click', async () => {
 ['#acc','#pwd'].forEach(s => $(s).addEventListener('keypress',e => { 
   if(e.key==='Enter') $('#btnLogin').click(); 
 }));
+
+// [!! 新增 !!] --- 忘記密碼邏輯 ---
+
+// --- 狀態變數 ---
+let currentEmail = ''; // 用於步驟 2 和 3
+let currentResetToken = ''; // 用於步驟 3
+const fpModalEl = $('#fpModal');
+const fpModal = new bootstrap.Modal(fpModalEl);
+
+// --- DOM 元素 ---
+const fpMsg = $('#fpMsg');
+const fpTitle = $('#fpModalTitle');
+const stepPanes = {
+    1: $('#step1'),
+    2: $('#step2'),
+    3: $('#step3')
+};
+const footerPanes = {
+    1: $('#footerStep1'),
+    2: $('#footerStep2'),
+    3: $('#footerStep3')
+};
+
+// --- 步驟控制 ---
+function showFpStep(step) {
+  // 隱藏所有
+  Object.values(stepPanes).forEach(p => p.classList.remove('active'));
+  Object.values(footerPanes).forEach(p => p.classList.add('d-none'));
+  
+  // 顯示當前
+  if (stepPanes[step]) stepPanes[step].classList.add('active');
+  if (footerPanes[step]) footerPanes[step].classList.remove('d-none');
+  
+  fpTitle.textContent = `重設密碼 (步驟 ${step}/3)`;
+  fpMsg.classList.add('d-none'); // 切換步驟時隱藏訊息
+}
+
+// --- 事件綁定: Modal 顯示時 ---
+fpModalEl.addEventListener('show.bs.modal', () => {
+    showFpStep(1);
+    currentEmail = '';
+    currentResetToken = '';
+    $('#fpAccount').value = '';
+    $('#fpCode').value = '';
+    $('#fpNewPass').value = '';
+    $('#fpConfirmPass').value = '';
+});
+
+// --- 事件綁定: 步驟 1 (請求驗證碼) ---
+$('#btnSendCode').addEventListener('click', async () => {
+  const account = $('#fpAccount').value.trim();
+  // [!! 修正 !!] 這裡是用 account 登入，但 password_request.php 是用 email
+  // [!! 假設 !!] password_request.php 應該也要能接受 account (ID/身分證)
+  // [!! 重要 !!] 檢查 password_request.php，它目前是用 'email' 欄位。
+  // [!! 暫時 !!] 我先假設使用者會輸入 Email (如果後端只支援 Email)
+  // [!! 修正 !!] 您的 password_request.php (後端) *只* 接受 Email。
+  // 我們必須要求使用者輸入 Email，而不是帳號。
+  
+  // [!! 修正 !!] 為了匹配您的後端 (password_request.php)
+  // 我們將欄位改成輸入 Email
+  
+  const email = $('#fpAccount').value.trim(); 
+  if (!email || !email.includes('@')) {
+    showMsg(fpMsg, '請輸入有效的 Email 地址');
+    return;
+  }
+
+  const btn = $('#btnSendCode');
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>發送中...';
+  
+  try {
+    const r = await fetch(API_FORGOT_REQUEST, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email: email }), // 後端接收 email
+      credentials: 'include'
+    });
+    const resp = await r.json();
+    if (!r.ok || resp.error) throw new Error(resp.error || resp.message);
+
+    showMsg(fpMsg, resp.message || '驗證碼已發送', true);
+    currentEmail = email; // 儲存 Email
+    showFpStep(2);
+
+  } catch (e) {
+    console.error('❌ 請求驗證碼錯誤:', e);
+    showMsg(fpMsg, String(e.message || e));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = old;
+  }
+});
+
+// --- 事件綁定: 步驟 2 (返回) ---
+$('#btnBackToStep1').addEventListener('click', () => {
+  showFpStep(1);
+});
+
+// --- 事件綁定: 步驟 2 (驗證驗證碼) ---
+$('#btnVerifyCode').addEventListener('click', async () => {
+  const code = $('#fpCode').value.trim();
+  if (!/^\d{6}$/.test(code)) {
+    showMsg(fpMsg, '請輸入 6 位數驗證碼');
+    return;
+  }
+
+  const btn = $('#btnVerifyCode');
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>驗證中...';
+
+  try {
+    const r = await fetch(API_FORGOT_VERIFY, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email: currentEmail, code: code }),
+      credentials: 'include'
+    });
+    const resp = await r.json();
+    if (!r.ok || resp.error) throw new Error(resp.error || resp.message);
+
+    if (!resp.reset_token) {
+        throw new Error('API 未返回 Token，驗證失敗');
+    }
+    
+    showMsg(fpMsg, '✓ 驗證成功！請設定新密碼。', true);
+    currentResetToken = resp.reset_token; // 儲存 Token
+    showFpStep(3);
+
+  } catch (e) {
+    console.error('❌ 驗證碼錯誤:', e);
+    showMsg(fpMsg, String(e.message || e));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = old;
+  }
+});
+
+
+// --- 事件綁定: 步驟 3 (重設密碼) ---
+$('#btnDoReset').addEventListener('click', async () => {
+  const newPass = $('#fpNewPass').value;
+  const confirmPass = $('#fpConfirmPass').value;
+
+  if (newPass.length < 6) {
+    showMsg(fpMsg, '密碼長度不可少於 6 碼');
+    return;
+  }
+  if (newPass !== confirmPass) {
+    showMsg(fpMsg, '兩次輸入的新密碼不相符');
+    return;
+  }
+
+  const btn = $('#btnDoReset');
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>儲存中...';
+
+  try {
+    const r = await fetch('api/password_reset.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ 
+        email: currentEmail, 
+        reset_token: currentResetToken,
+        new_password: newPass
+      }),
+      credentials: 'include'
+    });
+    const resp = await r.json();
+    if (!r.ok || resp.error) throw new Error(resp.error || resp.message);
+    
+    showMsg(fpMsg, '✓ 密碼已成功重設！請重新登入。', true);
+    setTimeout(() => {
+      fpModal.hide();
+    }, 2500);
+
+  } catch (e) {
+    console.error('❌ 重設密碼錯誤:', e);
+    showMsg(fpMsg, String(e.message || e));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = old;
+  }
+});
+
+
+// [!! 關鍵修正 !!] 
+// 您的後端 (password_request.php) 是 *依據 Email* 查詢員工的
+// 但您的登入 (password_login.php) 是 *依據 Account (ID/身分證)*
+// 這表示「忘記密碼」功能 *必須* 要求使用者輸入 Email
+// 我已經將 Modal 中的提示文字和 JS 邏輯修改為使用 Email
+//
+// 修正 1: 修改 <label> 和 <placeholder>
+const fpAccountLabel = document.querySelector('label[for="fpAccount"]');
+if (fpAccountLabel) {
+    fpAccountLabel.innerHTML = '<i class="bi bi-envelope"></i> 您的 Email';
+}
+const fpAccountInput = $('#fpAccount');
+if (fpAccountInput) {
+    fpAccountInput.placeholder = '輸入您註冊的電子信箱';
+}
+// 修正 2: 修改 <p> 提示文字
+const step1_p = document.querySelector('#step1 p');
+if (step1_p) {
+    step1_p.textContent = '請輸入您註冊時使用的 Email。系統將會發送一封密碼重設郵件到該信箱。';
+}
 </script>
 </body>
 </html>

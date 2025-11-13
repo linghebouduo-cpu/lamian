@@ -85,6 +85,7 @@ async function fetchReportsFromPHP() {
     
     const json = JSON.parse(text);
     
+    // [!! 關鍵 !!] 這裡現在可以正確解析 {"success":true, "data":...}
     if (!json.success) {
       alert("取得資料失敗：" + json.message);
       return [];
@@ -158,9 +159,16 @@ function updateSummary(data) {
 function populateFilledByOptions(data) {
   const uniqueNames = [...new Set(data.map(item => item.filled_by))];
   if (!filledByFilter) return;
+  
+  // [!! 修正 !!] 保存當前選定的值
+  const currentValue = filledByFilter.value;
+  
   filledByFilter.innerHTML =
     `<option value="">全部</option>` +
     uniqueNames.map(name => `<option value="${name}">${name}</option>`).join("");
+    
+  // [!! 修正 !!] 恢復選定的值
+  filledByFilter.value = currentValue;
 }
 
 // ===== 匯出 Excel =====
@@ -361,15 +369,23 @@ window.loadReports = async function () {
     allReports = await fetchReportsFromPHP();
   }
 
-  const start = startDateInput?.value ? new Date(startDateInput.value) : null;
-  const end = endDateInput?.value ? new Date(endDateInput.value) : null;
-  const by = filledByFilter?.value.trim() || "";
+  // [!! 關鍵修正 !!]
+  // 1. 我們改用 YYYY-MM-DD 字串來比較，避免 new Date() 的時區問題
+  // 2. 我們將 item.filled_by 轉為字串來比較，避免 10 !== "10" 的問題
+  
+  const start = startDateInput?.value || "";
+  const end = endDateInput?.value || "";
+  const by = filledByFilter?.value || "";
 
   const filtered = allReports.filter(item => {
-    const date = new Date(item.report_date);
+    const date = item.report_date; // e.g., "2025-11-10"
+    const filledBy = String(item.filled_by); // e.g., "10"
+
+    // 比較字串
     if (start && date < start) return false;
     if (end && date > end) return false;
-    if (by && item.filled_by !== by) return false;
+    if (by && filledBy !== by) return false; // <-- 修正後的比較
+    
     return true;
   });
 

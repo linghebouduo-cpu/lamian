@@ -130,7 +130,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
 <body class="sb-nav-fixed">
   <!-- Topbar -->
   <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-    <a class="navbar-brand ps-3" href="indexC.php">員工管理系統C</a>
+    <a class="navbar-brand ps-3" href="indexC.php">員工系統C</a>
     <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
 
     <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
@@ -246,7 +246,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
       <footer class="py-4 bg-light mt-auto">
         <div class="container-fluid px-4">
           <div class="d-flex align-items-center justify-content-between small">
-            <div class="text-muted">© 2024 令和博多餐廳管理系統 - Xxing0625</div>
+            <div class="text-muted">© 2025 拉麵店經營系統 - ukn</div>
             <div>
               <a href="#" class="text-decoration-none">隱私政策</a>
               <span class="mx-2">•</span>
