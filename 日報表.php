@@ -4,9 +4,12 @@
 
 require_once __DIR__ . '/includes/auth_check.php';
 
-// 只有 A 級（老闆）可以訪問
-if (!check_user_level('A', false)) {
-    show_no_permission_page(); // 會 exit
+// 2. 檢查權限：A 級(老闆) 或 B 級(管理員)
+// 假設 check_user_level() 會檢查當前 session 用戶
+if (!check_user_level('A', false) && !check_user_level('B', false)) {
+    // 如果 *既不是A* *也不是B*，導向回首頁 (index.php)
+    header('Location: index.php'); 
+    exit;
 }
 
 // 取得用戶資訊
@@ -34,189 +37,492 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
   <link href="css/styles.css" rel="stylesheet" />
   <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
 
-  <style>
-   :root {
-      --primary-gradient: linear-gradient(135deg, #fbb97ce4 0%, #ff0000cb 100%); /* 首頁同色 */
-      --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      --success-gradient: linear-gradient(135deg, #4facfe 0%, #54bcc1 100%);
-      --warning-gradient: linear-gradient(135deg, #fbb97ce4 0%, #ff00006a 100%);
-      --dark-bg: linear-gradient(135deg, #fbb97ce4 0%, #ff00006a 100%);
-      --card-shadow: 0 15px 35px rgba(0,0,0,.1);
-      --hover-shadow: 0 25px 50px rgba(0,0,0,.15);
-      --border-radius: 20px;
-      --transition: all .3s cubic-bezier(.4,0,.2,1);
-    }
-    * { transition: var(--transition); }
-    body {
-      background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100vh;
+<style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 30%, #f5e9ff 100%);
+    --text-main: #0f172a;
+    --text-subtle: #64748b;
+
+    --card-bg: rgba(255, 255, 255, 0.96);
+    --card-radius: 22px;
+
+    --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+    --shadow-hover: 0 22px 60px rgba(15, 23, 42, 0.18);
+
+    --transition-main: all .25s cubic-bezier(.4, 0, .2, 1);
+
+    --blue-main: #1e3a8a;
+    --blue-accent: #2563eb;
+    --blue-soft: #bfdbfe;
+    --green-main: #16a34a;
+    --amber-main: #f59e0b;
+    --rose-main: #e11d48;
+  }
+
+  * {
+    transition: var(--transition-main);
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.24), transparent 55%),
+      radial-gradient(circle at 100% 0%, rgba(222, 114, 244, 0.24), transparent 55%),
+      var(--bg-gradient);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text-main);
+  }
+
+  /* ===== Top navbar（跟首頁一樣藍色漸層） ===== */
+  .sb-topnav {
+    background: linear-gradient(120deg, #1e3a8a, #3658ff) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.42);
+    backdrop-filter: blur(18px);
+  }
+
+  .navbar-brand {
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #f9fafb !important;
+  }
+
+  .navbar-nav .nav-link {
+    color: #e5e7eb !important;
+  }
+  .navbar-nav .nav-link:hover {
+    color: #ffffff !important;
+  }
+
+  .user-avatar {
+    border: 2px solid rgba(191, 219, 254, 0.8);
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.1);
+  }
+
+  .container-fluid {
+    padding: 26px 28px;
+  }
+
+  /* ===== Navbar 專用搜尋框（保留你原本結構，改成藍系玻璃風） ===== */
+  .search-container-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+  }
+  .search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(248, 250, 252, 0.16);
+    border-radius: 999px;
+    padding: 4px 4px 4px 18px;
+    border: 1.5px solid rgba(191, 219, 254, 0.7);
+    backdrop-filter: blur(16px);
+  }
+  .search-container:hover {
+    background: rgba(248, 250, 252, 0.25);
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.55);
+  }
+  .search-container:focus-within {
+    background: rgba(248, 250, 252, 0.32);
+    border-color: rgba(129, 140, 248, 0.9);
+    box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.75);
+  }
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 9px 10px;
+    font-size: 0.9rem;
+    color: #e5e7eb;
+    font-weight: 500;
+  }
+  .search-input::placeholder {
+    color: rgba(226, 232, 240, 0.8);
+  }
+  .search-btn {
+    background: linear-gradient(135deg, #eff6ff, #ffffff);
+    border: none;
+    border-radius: 999px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.35);
+  }
+  .search-btn:hover {
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.45);
+  }
+  .search-btn i {
+    color: #2563eb;
+    font-size: 0.9rem;
+  }
+
+  /* ===== Sidebar：沿用首頁那套藍白風 ===== */
+  .sb-sidenav {
+    background:
+      radial-gradient(circle at 40% 0%, rgba(56, 189, 248, 0.38), transparent 65%),
+      radial-gradient(circle at 80% 100%, rgba(147, 197, 253, 0.34), transparent 70%),
+      linear-gradient(180deg, rgba(220, 235, 255, 0.92), rgba(185, 205, 255, 0.9));
+    backdrop-filter: blur(22px);
+    border-right: 1px solid rgba(255, 255, 255, 0.55);
+  }
+
+  .sb-sidenav-menu-heading {
+    color: #1e293b !important;
+    opacity: 0.75;
+    font-size: 0.78rem;
+    letter-spacing: .18em;
+    margin: 20px 0 8px 16px;
+  }
+
+  .sb-sidenav .nav-link {
+    color: #0f172a !important;
+    font-weight: 600;
+    border-radius: 18px;
+    padding: 12px 18px;
+    margin: 8px 12px;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.80),
+      rgba(241, 248, 255, 0.95)
+    );
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sb-sidenav .nav-link .sb-nav-link-icon {
+    margin-right: 10px;
+    color: #1e293b !important;
+    opacity: 0.9 !important;
+    font-size: 1.05rem;
+  }
+
+  .sb-sidenav .sb-sidenav-collapse-arrow i {
+    color: #1e293b !important;
+    opacity: 0.85 !important;
+  }
+
+  .sb-sidenav .nav-link:hover {
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 14px 30px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .sb-sidenav .nav-link:hover .sb-nav-link-icon,
+  .sb-sidenav .nav-link:hover .sb-sidenav-collapse-arrow i {
+    color: #0f172a !important;
+    opacity: 1 !important;
+  }
+
+  .sb-sidenav .nav-link.active {
+    background: linear-gradient(135deg, #4f8bff, #7b6dff);
+    border-color: rgba(255, 255, 255, 0.98);
+    color: #ffffff !important;
+    box-shadow: 0 18px 36px rgba(59, 130, 246, 0.6);
+  }
+
+  .sb-sidenav .nav-link.active .sb-nav-link-icon,
+  .sb-sidenav .nav-link.active .sb-sidenav-collapse-arrow i {
+    color: #e0f2fe !important;
+  }
+
+  .sb-sidenav-footer {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.9),
+      rgba(226, 232, 255, 0.95)
+    ) !important;
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(148, 163, 184, 0.5);
+    padding: 16px 20px;
+    color: #111827 !important;
+    box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.10);
+    font-size: 0.95rem;
+  }
+  .sb-sidenav-footer .small {
+    color: #6b7280 !important;
+  }
+
+  /* ===== 標題 & 麵包屑 ===== */
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    background: linear-gradient(120deg, #0f172a, #2563eb);
+    -webkit-background-clip: text;
+    color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .breadcrumb {
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+  }
+  .breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    color: #9ca3af;
+  }
+
+      /* ====== 卡片 / 表格 ====== */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      box-shadow: var(--shadow-soft);
     }
 
-    /* 頂欄（跟首頁一致） */
-    .sb-topnav {
-      background: var(--dark-bg) !important;
+    .card-header {
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(239, 246, 255, 0.96));
+      border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding-top: 14px;
+      padding-bottom: 10px;
+    }
+
+    .card-body {
+      padding: 18px 20px 20px;
+    }
+
+    .table thead th {
+      background: linear-gradient(135deg, #4f8bff, #7b6dff);
+      color: #fff;
       border: none;
-      box-shadow: var(--card-shadow);
-      backdrop-filter: blur(10px);
-    }
-    .navbar-brand {
-      font-weight: 700;
-      font-size: 1.5rem;
-      background: linear-gradient(45deg, #ffffff, #ffffff);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      text-shadow: none;
-    }
-
-    /* 🔥 修正：使用 員工資料表.php 的頂欄搜尋框樣式 */
-    .search-container-wrapper {
-        position: relative;
-        width: 100%;
-        max-width: 400px;
-    }
-    .search-container {
-        position: relative;
-        display: flex;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 50px;
-        padding: 4px 4px 4px 20px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        backdrop-filter: blur(10px);
-        border: 2px solid transparent;
-    }
-    .search-container:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
-    }
-    .search-container:focus-within {
-        background: rgba(255, 255, 255, 0.25);
-        border-color: rgba(255, 255, 255, 0.5);
-    }
-    .search-input {
-        flex: 1;
-        border: none;
-        outline: none;
-        background: transparent;
-        padding: 10px 12px;
-        font-size: 14px;
-        color: #fff;
-        font-weight: 500;
-    }
-    .search-input::placeholder {
-        color: rgba(255, 255, 255, 0.7);
-        font-weight: 400;
-    }
-    .search-btn {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-        border: none;
-        border-radius: 40px;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    .search-btn:hover {
-        transform: scale(1.08);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-    }
-    .search-btn i {
-        color: #ff6b6b;
-        font-size: 16px;
-    }
-    .user-avatar{border:2px solid rgba(255,255,255,.5)}
-
-
-    /* 側欄（跟首頁一致） */
-    .sb-sidenav {
-      background: linear-gradient(180deg, #fbb97ce4 0%, #ff00006a 100%) !important;
-      box-shadow: var(--card-shadow);
-      backdrop-filter: blur(10px);
-    }
-    .sb-sidenav-menu-heading {
-      color: rgba(255,255,255,.7) !important;
       font-weight: 600;
-      font-size: .85rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 20px 15px 10px 15px !important;
-      margin-top: 15px;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
     }
-    .sb-sidenav .nav-link {
-      border-radius: 15px;
-      margin: 5px 15px;
-      padding: 12px 15px;
-      position: relative;
+
+    .table tbody td {
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+      border-color: rgba(226, 232, 240, 0.9);
+    }
+
+    .table tbody tr:hover {
+      background: rgba(59, 130, 246, 0.06);
+    }
+
+    /* ====== KPI 四張統計卡：沿用日報表樣式 ====== */
+    .kpi-card {
+      border-radius: 26px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
       overflow: hidden;
-      color: rgba(255,255,255,.9) !important;
-      font-weight: 500;
-      backdrop-filter: blur(10px);
+      position: relative;
     }
-    .sb-sidenav .nav-link:hover {
-      background: rgba(255,255,255,.15) !important;
-      transform: translateX(8px);
-      box-shadow: 0 8px 25px rgba(0,0,0,.2);
-      color: #fff !important;
+    .kpi-card .card-body {
+      position: relative;
+      z-index: 1;
     }
-    .sb-sidenav .nav-link.active {
-      background: rgba(255,255,255,.2) !important;
-      color: #fff !important;
-      font-weight: 600;
-      box-shadow: 0 8px 25px rgba(0,0,0,.15);
-    }
-    .sb-sidenav .nav-link::before {
+    .kpi-card::after {
       content: '';
-      position: absolute; left: 0; top: 0; height: 100%; width: 4px;
-      background: linear-gradient(45deg, #ffffff, #ffffff); /* 和首頁相同：白色亮條 */
-      transform: scaleY(0);
-      transition: var(--transition);
-      border-radius: 0 10px 10px 0;
+      position: absolute;
+      right: -80px;
+      bottom: -80px;
+      width: 260px;
+      height: 180px;
+      border-radius: 55% 0 0 0;
+      background: radial-gradient(circle at 0 0, #e5e7eb, transparent 60%);
+      opacity: 0.9;
     }
-    .sb-sidenav .nav-link:hover::before,
-    .sb-sidenav .nav-link.active::before { transform: scaleY(1); }
-
-    .sb-sidenav .nav-link i { width: 20px; text-align: center; margin-right: 10px; font-size: 1rem; }
-    .sb-sidenav-footer {
-      background: rgba(255,255,255,.1) !important;
-      color: #fff !important;
-      border-top: 1px solid rgba(255,255,255,.2);
-      padding: 20px 15px;
-      margin-top: 20px;
+    .kpi-card .icon-pill {
+      width: 46px;
+      height: 46px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 10px 25px rgba(15,23,42,0.16);
+      background: rgba(255,255,255,0.9);
     }
-    /* 內容區 */
-    .container-fluid{ padding:30px !important; }
-    h1{
-      background: var(--primary-gradient);
-      background-clip:text; -webkit-background-clip:text;
-      color:transparent; -webkit-text-fill-color:transparent;
-      font-weight:700; font-size:2.5rem; margin-bottom:30px;
+
+    .kpi-primary {
+      background: linear-gradient(135deg, #acc6f6ff, #818cf859) !important;
     }
-    .breadcrumb{ background: rgba(255,255,255,.8); border-radius: var(--border-radius); padding: 15px 20px; box-shadow: var(--card-shadow); backdrop-filter: blur(10px); }
+    .kpi-success {
+      background: linear-gradient(135deg, #b1f9caff, #22c55e4d) !important;
+    }
+    .kpi-warning {
+      background: linear-gradient(135deg, #faebaeff, #facc154d) !important;
+    }
+    .kpi-info {
+      background: linear-gradient(135deg, #bce4ffff, #38bdf84d) !important;
+    }
 
-    .card{ border:none; border-radius: var(--border-radius); box-shadow: var(--card-shadow); background:#fff; overflow:hidden; }
-    .card-header{ background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,255,255,.75)); font-weight:600; }
-    .form-control, .form-select{ border-radius:12px; }
-    .btn-primary{ background: var(--primary-gradient); border:none; border-radius:25px; }
-    .btn-primary:hover{ transform:scale(1.05); box-shadow:0 10px 25px rgba(209,209,209,.976); }
+    /* ===== 狀態徽章 ===== */
+    .badge-status {
+      border-radius: 999px;
+      padding: .35rem .6rem;
+      border: 1px solid transparent;
+      font-size: 0.78rem;
+    }
+    .badge-normal {
+      background: rgba(22, 163, 74, .12);
+      border-color: rgba(22, 163, 74, .35);
+      color: #166534;
+    }
+    .badge-ot {
+      background: rgba(37, 99, 235, .12);
+      border-color: rgba(37, 99, 235, .35);
+      color: #1d4ed8;
+    }
+    .badge-missing {
+      background: rgba(220, 38, 38, .12);
+      border-color: rgba(220, 38, 38, .35);
+      color: #b91c1c;
+    }
 
-    /* KPI 卡片 */
-    .kpi-card{ color:#fff; border:none; border-radius:16px; box-shadow: var(--card-shadow); }
-    .kpi-income{ background: var(--success-gradient); }
-    .kpi-expense{ background: var(--warning-gradient); color:#000; }
-    .kpi-net{ background: var(--secondary-gradient); }
-    .kpi-deposit{ background: var(--primary-gradient); }
-    .kpi-card .kpi-value{ font-size:1.4rem; font-weight:700; }
-    .table thead th{ background: var(--primary-gradient); color:#000; border:none; font-weight:600; }
 
-    .table-hover tbody tr:hover{ background: rgba(227,23,111,.05); transform:scale(1.01); }
-  </style>
+  /* ===== Alert 區塊（上方成功 / 警告 / 錯誤訊息） ===== */
+  #successAlert,
+  #warningAlert,
+  #errorAlert {
+    border-radius: 18px;
+    padding: 10px 14px;
+    border-width: 1px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #successAlert {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border-color: rgba(34, 197, 94, 0.55);
+    color: #065f46;
+  }
+  #warningAlert {
+    background: linear-gradient(135deg, #fef9c3, #fee2a1);
+    border-color: rgba(234, 179, 8, 0.6);
+    color: #78350f;
+  }
+  #errorAlert {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border-color: rgba(248, 113, 113, 0.65);
+    color: #7f1d1d;
+  }
+  #successAlert .btn-close,
+  #warningAlert .btn-close,
+  #errorAlert .btn-close {
+    margin-left: auto;
+  }
+
+  /* 下方合計用的 alert */
+  .alert-success {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border-color: rgba(34, 197, 94, 0.6);
+    color: #065f46;
+  }
+  .alert-danger {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border-color: rgba(248, 113, 113, 0.65);
+    color: #7f1d1d;
+  }
+  .alert-warning {
+    background: linear-gradient(135deg, #fef9c3, #fee2a1);
+    border-color: rgba(234, 179, 8, 0.65);
+    color: #78350f;
+  }
+  .alert-info {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    border-color: rgba(59, 130, 246, 0.6);
+    color: #1e3a8a;
+  }
+
+  /* 店內現金 input-group 小修 */
+  .input-group-text {
+    border-radius: 10px 0 0 10px;
+    border-color: rgba(209, 213, 219, 0.9);
+    background: #f9fafb;
+    font-size: 0.82rem;
+  }
+  .input-group .form-control {
+    border-radius: 0 10px 10px 0;
+  }
+
+  /* ===== 主要按鈕（送出日報表） ===== */
+  .btn-primary {
+    background: linear-gradient(135deg, #4f46e5, #2563eb);
+    border: none;
+    border-radius: 999px;
+    padding-inline: 18px;
+    min-width: 160px;
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.55);
+    font-weight: 600;
+    letter-spacing: .03em;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 18px 40px rgba(37, 99, 235, 0.75);
+    filter: brightness(1.03);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.6);
+  }
+
+  .btn-secondary.btn-sm,
+  .btn-outline-secondary.btn-sm {
+    border-radius: 999px;
+    font-size: 0.78rem;
+  }
+
+  /* 租金設定 Modal */
+  #rentSettingModal .modal-content {
+    border-radius: 18px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+  }
+  #rentSettingModal .modal-header {
+    border-bottom-color: rgba(226, 232, 240, 0.8);
+    background: linear-gradient(135deg, #eff6ff, #e0f2fe);
+  }
+  #rentSettingModal .modal-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e3a8a;
+  }
+
+  /* footer 跟首頁一致 */
+  footer {
+    background: transparent !important;
+    border-top: 1px solid rgba(148, 163, 184, 0.35);
+    margin-top: 24px;
+    padding-top: 14px;
+    font-size: 0.8rem;
+    color: var(--text-subtle);
+  }
+
+  @media (max-width: 992px) {
+    .container-fluid {
+      padding: 20px 16px;
+    }
+  }
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding: 16px 12px;
+    }
+    h1 {
+      font-size: 1.6rem;
+    }
+  }
+</style>
+
 </head>
 
 <body class="sb-nav-fixed">
@@ -224,16 +530,7 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
       <a class="navbar-brand ps-3" href="index.php">員工管理系統</a>
       <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
 
-      <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-          <div class="search-container-wrapper">
-              <div class="search-container">
-                  <input class="search-input" type="text" placeholder="搜尋員工、班表、薪資..." aria-label="Search" />
-                  <button class="search-btn" id="btnNavbarSearch" type="button">
-                      <i class="fas fa-search"></i>
-                  </button>
-              </div>
-          </div>
-      </form>
+      <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0"></form>
 
       <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
           <li class="nav-item dropdown">
@@ -267,14 +564,26 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
             </a>
             <div class="collapse" id="collapseLayouts" data-bs-parent="#sidenavAccordion">
               <nav class="sb-sidenav-menu-nested nav">
-                <a class="nav-link" href="員工資料表.php">員工資料表</a>
-                <a class="nav-link" href="班表管理.php">班表管理</a>
-                <a class="nav-link" href="日報表記錄.php">日報表記錄</a>
-                <a class="nav-link" href="假別管理.php">假別管理</a>
-                <a class="nav-link" href="打卡管理.php">打卡管理</a>
-                <a class="nav-link" href="薪資管理.html">薪資管理</a>
-              </nav>
-            </div>
+    <?php if ($userLevel === 'A'): ?>
+      <!-- 只有 A 級（老闆）可以看到 -->
+      <a class="nav-link" href="員工資料表.php">員工資料表</a>
+    <?php endif; ?>
+
+    <a class="nav-link" href="班表管理.php">班表管理</a>
+     <?php if ($userLevel === 'A'): ?>
+      <!-- 只有 A 級（老闆）可以看到 -->
+      <a class="nav-link" href="日報表記錄.php">日報表記錄</a>
+    <?php endif; ?>   
+    <a class="nav-link" href="假別管理.php">假別管理</a>
+    <a class="nav-link" href="打卡管理.php">打卡管理</a>
+
+    <?php if ($userLevel === 'A'): ?>
+      <!-- 只有 A 級（老闆）可以看到 -->
+      <a class="nav-link" href="薪資管理.php">薪資管理</a>
+    <?php endif; ?>
+
+  </nav>
+</div>
 
             <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOperation" aria-expanded="true">
               <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>營運管理
@@ -290,17 +599,15 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
                   <nav class="sb-sidenav-menu-nested nav">
                     <a class="nav-link" href="庫存查詢.php">庫存查詢</a>
                     <a class="nav-link" href="庫存調整.php">庫存調整</a>
+                    <a class="nav-link" href="商品管理.php">商品管理</a>
                   </nav>
                 </div>
 
                 <a class="nav-link active" href="日報表.php"><div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
-                <a class="nav-link" href="薪資管理.html"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
-                <a class="nav-link" href="班表.html"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
-              </nav>
+                 </nav>
             </div>
 
-            <a class="nav-link" href="請假申請.php"><div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>請假申請</a>
-
+            
             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseWebsite" aria-expanded="false">
               <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>網站管理
               <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
@@ -363,52 +670,69 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
           </div>
         </div>
 
-          <div class="row g-3 mb-3">
-            <div class="col-xl-3 col-md-6">
-              <div class="card kpi-card kpi-income">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                  <div>
-                    <div class="small text-white-50">今日收入合計</div>
-                    <div class="kpi-value" id="kpi_income">—</div>
-                  </div>
-                  <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <div class="card kpi-card kpi-expense">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                  <div>
-                    <div class="small">今日支出合計</div>
-                    <div class="kpi-value" id="kpi_expense">—</div>
-                  </div>
-                  <i class="fas fa-credit-card fa-2x opacity-75"></i>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <div class="card kpi-card kpi-net">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                  <div>
-                    <div class="small text-white-50">今日淨收入（收−支）</div>
-                    <div class="kpi-value" id="kpi_net">—</div>
-                  </div>
-                  <i class="fas fa-chart-line fa-2x opacity-75"></i>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <div class="card kpi-card kpi-deposit">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                  <div>
-                    <div class="small text-white-50">存入銀行</div>
-                    <div class="kpi-value" id="kpi_deposit">—</div>
-                  </div>
-                  <i class="fas fa-university fa-2x opacity-75"></i>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div class="row g-3 mb-3">
+  <!-- 今日收入合計：綠色 -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card kpi-card kpi-success">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <div class="small kpi-label">今日收入合計</div>
+          <div class="kpi-value" id="kpi_income">—</div>
+        </div>
+        <div class="icon-pill">
+          <i class="fas fa-dollar-sign"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 今日支出合計：藍色 -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card kpi-card kpi-primary">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <div class="small kpi-label">今日支出合計</div>
+          <div class="kpi-value" id="kpi_expense">—</div>
+        </div>
+        <div class="icon-pill">
+          <i class="fas fa-credit-card"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 今日淨收入：黃色 -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card kpi-card kpi-warning">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <div class="small kpi-label">今日淨收入（收−支）</div>
+          <div class="kpi-value" id="kpi_net">—</div>
+        </div>
+        <div class="icon-pill">
+          <i class="fas fa-chart-line"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 存入銀行：藍綠色 -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card kpi-card kpi-info">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <div class="small kpi-label">存入銀行</div>
+          <div class="kpi-value" id="kpi_deposit">—</div>
+        </div>
+        <div class="icon-pill">
+          <i class="fas fa-university"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
         <form id="dailyReportForm">
   <div class="card mb-4">
@@ -636,6 +960,11 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   <script src="日報表.js"></script>
+
+
+
+
+
   <script>
       // ---- 常數（PHP 變數注入） ----
       const API_BASE  = <?php echo json_encode($API_BASE_URL, JSON_UNESCAPED_SLASHES); ?>;
@@ -645,10 +974,10 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
       const el = id => document.getElementById(id);
 
       // 折起/展開側欄
-      el('sidebarToggle')?.addEventListener('click', e => { 
-          e.preventDefault(); 
-          document.body.classList.toggle('sb-sidenav-toggled'); 
-      });
+   el('sidebarToggle')?.addEventListener('click', e => { 
+    e.preventDefault(); 
+    document.body.classList.toggle('sb-sidenav-toggled');
+});
 
       // 取得登入者資訊（已從 PHP Session 取得）
       async function loadLoggedInUser(){
@@ -684,6 +1013,9 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
           }
       }
 
+
+
+
       // 初始化
       window.addEventListener('DOMContentLoaded', async ()=>{
           await loadLoggedInUser();
@@ -695,6 +1027,36 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
               console.error("updateKPI() 函式不存在，請檢查 日報表.js");
           }
       });
-  </script>
+  </script><script>
+// 店內現金計算
+function updateCashTotal() {
+    // 每個面額對應其輸入欄位 id
+    const cashMap = {
+        1000: "cash_1000",
+        500:  "cash_500",
+        100:  "cash_100",
+        50:   "cash_50",
+        10:   "cash_10",
+        5:    "cash_5",
+        1:    "cash_1",
+    };
+
+    let total = 0;
+
+    // 逐一計算 (張數 × 面額)
+    for (const [value, id] of Object.entries(cashMap)) {
+        const count = Number(document.getElementById(id)?.value) || 0;
+        total += count * Number(value);
+    }
+
+    // 顯示到前端 <span id="cash_total">
+    document.getElementById("cash_total").innerText = total;
+}
+
+// 🔥 為所有 class="cash" 的輸入框加入監聽事件
+document.querySelectorAll(".cash").forEach(input => {
+    input.addEventListener("input", updateCashTotal);
+});
+</script>
 </body>
 </html>

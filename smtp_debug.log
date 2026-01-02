@@ -1,0 +1,392 @@
+[2025-10-29 04:18:27] SMTP Debug: SERVER -> CLIENT: 220 smtp.gmail.com ESMTP d2e1a72fcca58-7a414068f7dsm13555564b3a.48 - gsmtp
+
+[2025-10-29 04:18:27] SMTP Debug: CLIENT -> SERVER: EHLO localhost
+
+[2025-10-29 04:18:27] SMTP Debug: SERVER -> CLIENT: 250-smtp.gmail.com at your service, [2402:7500:598:2de0:2c67:df92:dd5f:a87d]
+250-SIZE 35882577
+250-8BITMIME
+250-STARTTLS
+250-ENHANCEDSTATUSCODES
+250-PIPELINING
+250-CHUNKING
+250 SMTPUTF8
+
+[2025-10-29 04:18:27] SMTP Debug: CLIENT -> SERVER: STARTTLS
+
+[2025-10-29 04:18:28] SMTP Debug: SERVER -> CLIENT: 220 2.0.0 Ready to start TLS
+
+[2025-10-29 04:18:28] SMTP Debug: CLIENT -> SERVER: EHLO localhost
+
+[2025-10-29 04:18:28] SMTP Debug: SERVER -> CLIENT: 250-smtp.gmail.com at your service, [2402:7500:598:2de0:2c67:df92:dd5f:a87d]
+250-SIZE 35882577
+250-8BITMIME
+250-AUTH LOGIN PLAIN XOAUTH2 PLAIN-CLIENTTOKEN OAUTHBEARER XOAUTH
+250-ENHANCEDSTATUSCODES
+250-PIPELINING
+250-CHUNKING
+250 SMTPUTF8
+
+[2025-10-29 04:18:28] SMTP Debug: CLIENT -> SERVER: AUTH LOGIN
+
+[2025-10-29 04:18:28] SMTP Debug: SERVER -> CLIENT: 334 VXNlcm5hbWU6
+
+[2025-10-29 04:18:28] SMTP Debug: CLIENT -> SERVER: [credentials hidden]
+[2025-10-29 04:18:28] SMTP Debug: SERVER -> CLIENT: 334 UGFzc3dvcmQ6
+
+[2025-10-29 04:18:28] SMTP Debug: CLIENT -> SERVER: [credentials hidden]
+[2025-10-29 04:18:29] SMTP Debug: SERVER -> CLIENT: 235 2.7.0 Accepted
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: MAIL FROM:<linghebouduo@gmail.com>
+
+[2025-10-29 04:18:29] SMTP Debug: SERVER -> CLIENT: 250 2.1.0 OK d2e1a72fcca58-7a414068f7dsm13555564b3a.48 - gsmtp
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: RCPT TO:<110534108@stu.ukn.edu.tw>
+
+[2025-10-29 04:18:29] SMTP Debug: SERVER -> CLIENT: 250 2.1.5 OK d2e1a72fcca58-7a414068f7dsm13555564b3a.48 - gsmtp
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: DATA
+
+[2025-10-29 04:18:29] SMTP Debug: SERVER -> CLIENT: 354 Go ahead d2e1a72fcca58-7a414068f7dsm13555564b3a.48 - gsmtp
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: Date: Wed, 29 Oct 2025 04:18:26 +0100
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: To: =?UTF-8?B?5ris6Kmm5ZOh5bel?= <110534108@stu.ukn.edu.tw>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: From: =?UTF-8?B?6KuL5YGH5a+p5qC457O757Wx?= <linghebouduo@gmail.com>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: Subject: =?UTF-8?B?W+iri+WBh+WvqeaguOmAmuefpV0g5oKo55qE55eF5YGH55Sz6KuL5bey5qC4?=
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:  =?UTF-8?B?5YeG?=
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: Message-ID: <tVYRoyOyI1h6HXlekJnEK8s7ZOIeqZ9kwJhHSjc@localhost>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: X-Mailer: PHPMailer 6.9.1 (https://github.com/PHPMailer/PHPMailer)
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: MIME-Version: 1.0
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: Content-Type: multipart/alternative;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:  boundary="b1=_tVYRoyOyI1h6HXlekJnEK8s7ZOIeqZ9kwJhHSjc"
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: Content-Transfer-Encoding: 8bit
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: --b1=_tVYRoyOyI1h6HXlekJnEK8s7ZOIeqZ9kwJhHSjc
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: Content-Type: text/plain; charset=UTF-8
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: Content-Transfer-Encoding: 8bit
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 請假審核通知
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 測試員工 您好：
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 您的請假申請已經審核完成。
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 申請編號：#4554
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 假別：病假
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 請假期間：2025-10-29 至 2025-10-30
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 請假天數：2 天
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 審核結果：已核准
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 如有任何疑問，請聯繫人事部門。
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: --b1=_tVYRoyOyI1h6HXlekJnEK8s7ZOIeqZ9kwJhHSjc
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: Content-Type: text/html; charset=UTF-8
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: Content-Transfer-Encoding: 8bit
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:         <!DOCTYPE html>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:         <html>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:         <head>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:             <meta charset='utf-8'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:             <style>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 body { 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     font-family: 'Microsoft JhengHei', Arial, sans-serif; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     line-height: 1.8; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     color: #333; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     margin: 0;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     padding: 0;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     background: #f5f5f5;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .container { 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     max-width: 600px; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     margin: 20px auto; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     background: #ffffff;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     border-radius: 10px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     overflow: hidden;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .header { 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     color: white; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     padding: 30px 20px; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     text-align: center; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .header h2 { 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     margin: 0; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     font-size: 24px; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .status-badge {
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     display: inline-block;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     margin-top: 10px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     padding: 8px 20px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     background: rgba(255,255,255,0.2);
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     border-radius: 20px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     font-size: 14px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .content { 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     padding: 30px 20px; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .greeting {
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     font-size: 16px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     margin-bottom: 20px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .info-row { 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     margin: 15px 0; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     padding: 15px; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     background: #f8f9fa; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     border-left: 4px solid #28a745; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     border-radius: 5px; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .label { 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     font-weight: bold; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     color: #28a745; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     display: inline-block; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     min-width: 100px; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .reject-reason {
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     margin-top: 20px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     padding: 15px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     background: #fff3cd;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     border: 1px solid #ffc107;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     border-radius: 5px;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     color: #856404;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 .footer { 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     text-align: center; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     padding: 20px; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     color: #999; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     font-size: 12px; 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     background: #f8f9fa;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     border-top: 1px solid #e0e0e0;
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 }
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:             </style>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:         </head>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:         <body>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:             <div class='container'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 <div class='header'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <h2>請假審核通知</h2>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <div class='status-badge'>已核准</div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 <div class='content'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <div class='greeting'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         測試員工 您好：
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <p>您的請假申請已經審核完成。</p>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <div class='info-row'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span class='label'>申請編號</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span>#4554</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <div class='info-row'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span class='label'>假別</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span>病假</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <div class='info-row'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span class='label'>請假期間</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span>2025-10-29 至 2025-10-30</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <div class='info-row'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span class='label'>請假天數</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span>2 天</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <div class='info-row'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span class='label'>審核結果</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         <span style='color: #28a745; font-weight: bold;'>已核准</span>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     <p style='margin-top: 30px; color: #666;'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                         如有任何疑問，請聯繫人事部門。
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     </p>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 <div class='footer'>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     此為系統自動發送的郵件，請勿直接回覆<br>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                     2025-10-29 04:18:26
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:                 </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:             </div>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:         </body>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:         </html>
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER:         
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: --b1=_tVYRoyOyI1h6HXlekJnEK8s7ZOIeqZ9kwJhHSjc--
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: 
+
+[2025-10-29 04:18:29] SMTP Debug: CLIENT -> SERVER: .
+
+[2025-10-29 04:18:30] SMTP Debug: SERVER -> CLIENT: 250 2.0.0 OK  1761707910 d2e1a72fcca58-7a414068f7dsm13555564b3a.48 - gsmtp
+
+[2025-10-29 04:18:30] SMTP Debug: CLIENT -> SERVER: QUIT
+
+[2025-10-29 04:18:30] SMTP Debug: SERVER -> CLIENT: 221 2.0.0 closing connection d2e1a72fcca58-7a414068f7dsm13555564b3a.48 - gsmtp
+

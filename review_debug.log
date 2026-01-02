@@ -1,0 +1,73 @@
+
+
+========== 2025-10-29 16:53:38 ==========
+開始處理審核請求
+✓ 資料庫連線成功
+收到參數: leaveId=0, action=
+❌ 主程式錯誤: 無效的申請編號
+錯誤堆疊: #0 C:\xampp\htdocs\lamian-ukn\整合email.php(28): require_once()
+#1 {main}
+
+
+========== 2025-10-29 17:00:17 ==========
+開始處理審核請求
+✓ 資料庫連線成功
+收到 JSON 資料: {"id":46,"action":"rejected"}
+收到參數: leaveId=46, action=rejected
+❌ 主程式錯誤: 無效的操作
+錯誤堆疊: #0 C:\xampp\htdocs\lamian-ukn\整合email.php(28): require_once()
+#1 {main}
+
+
+========== 2025-10-29 17:03:00 ==========
+開始處理審核請求
+✓ 資料庫連線成功
+收到 JSON 資料: {"leaveId":47,"action":"approved","rejectReason":""}
+收到參數: leaveId=47, action=approved
+❌ 主程式錯誤: 無效的操作
+錯誤堆疊: #0 C:\xampp\htdocs\lamian-ukn\整合email.php(28): require_once()
+#1 {main}
+
+
+========== 2025-10-29 17:03:21 ==========
+開始處理審核請求
+✓ 資料庫連線成功
+收到 JSON 資料: {"leaveId":47,"action":"approved","rejectReason":""}
+收到參數: leaveId=47, action=approved
+❌ 主程式錯誤: 無效的操作
+錯誤堆疊: #0 C:\xampp\htdocs\lamian-ukn\整合email.php(28): require_once()
+#1 {main}
+
+
+========== 2025-10-29 17:03:34 ==========
+開始處理審核請求
+✓ 資料庫連線成功
+收到 JSON 資料: {"leaveId":48,"action":"rejected","rejectReason":"EWG"}
+收到參數: leaveId=48, action=rejected
+❌ 主程式錯誤: 無效的操作
+錯誤堆疊: #0 C:\xampp\htdocs\lamian-ukn\整合email.php(28): require_once()
+#1 {main}
+
+
+========== 2025-10-29 17:05:53 ==========
+開始處理審核請求
+✓ 資料庫連線成功
+收到 JSON 資料: {"leaveId":48,"action":"approved","rejectReason":""}
+收到參數: leaveId=48, action=approved
+❌ 主程式錯誤: 無效的操作
+錯誤堆疊: #0 C:\xampp\htdocs\lamian-ukn\整合email.php(28): require_once()
+#1 {main}
+
+
+========== 2025-10-29 17:20:37 ==========
+開始處理審核請求
+✓ 資料庫連線成功
+收到 JSON 資料: {"leaveId":48,"action":"approved","rejectReason":""}
+收到參數: leaveId=48, action=approved
+
+
+========== 2025-10-29 17:23:54 ==========
+開始處理審核請求
+✓ 資料庫連線成功
+收到 JSON 資料: {"leaveId":48,"action":"approved","rejectReason":""}
+收到參數: leaveId=48, action=approved

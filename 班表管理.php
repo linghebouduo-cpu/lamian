@@ -1,34 +1,65 @@
 <?php
 // /lamian-ukn/班表管理.php
-// ✅ 只有 A 級（老闆）和 B 級（管理員）可以訪問此頁
-// 🔥 參照 員工資料表.php 的版型與權限邏輯
-// 🔥 預設載入「下週」的日期
+// ✅ 正確使用 auth_check.php 的版本
 
-// 1. 載入權限檢查
-require_once __DIR__ . '/includes/auth_check.php';
+// 🔥 重要:先啟動 session
+session_start();
 
-// 2. 檢查權限：A 級(老闆) 或 B 級(管理員)
-// 假設 check_user_level() 會檢查當前 session 用戶
-if (!check_user_level('A', false) && !check_user_level('B', false)) {
-    // 如果 *既不是A* *也不是B*，導向回首頁 (index.php)
-    header('Location: index.php'); 
-    exit;
+// 1. 載入權限檢查 (確保路徑正確)
+$auth_file = __DIR__ . '/includes/auth_check.php';
+
+if (file_exists($auth_file)) {
+    require_once $auth_file;
+    
+    // 2. 檢查權限:A 級(老闆)或 B 級(管理員)
+    check_user_level(['A', 'B'], true);
+    
+    // 3. 取得用戶資訊
+    $user = get_user_info();
+    $userName  = $user['name'];
+    $userId    = $user['uid'];
+    $userLevel = $user['level'];
+    
+    error_log("✅ 班表管理 - 使用 auth_check.php - 用戶: {$userName} ({$userId}), Level: {$userLevel}");
+    
+} else {
+    // 🔥 如果找不到 auth_check.php,使用備用方案
+    error_log("⚠️ auth_check.php 不存在於: {$auth_file}");
+    
+    // 檢查登入
+    if (!isset($_SESSION['uid']) || empty($_SESSION['uid'])) {
+        header('Location: login.php');
+        exit;
+    }
+    
+    // 檢查權限
+    $userLevel = $_SESSION['user_level'] ?? $_SESSION['role_code'] ?? $_SESSION['role'] ?? 'C';
+    
+    if (!in_array($userLevel, ['A', 'B'])) {
+        // 不是 A 或 B,導向對應首頁
+        if ($userLevel === 'C') {
+            header('Location: indexC.php');
+        } else {
+            header('Location: index.php');
+        }
+        exit;
+    }
+    
+    // 取得用戶資訊
+    $userName = $_SESSION['name'] ?? '未知用戶';
+    $userId   = $_SESSION['uid'] ?? '';
+    
+    error_log("⚠️ 班表管理 - 使用備用方案 - 用戶: {$userName} ({$userId}), Level: {$userLevel}");
 }
 
-// 3. 取得用戶資訊 (既然通過了檢查，表示已登入且有權限)
-$user = get_user_info();
-$userName  = $user['name'];
-$userId    = $user['uid'];
-$userLevel = $user['level'];
-
-// 4. 統一路徑 (從 員工資料表.php 複製)
+// 4. 統一路徑
 $API_BASE_URL  = '/lamian-ukn/api';
 $DATA_BASE_URL = '/lamian-ukn/首頁';
 
-$pageTitle = '班表管理 - 員工管理系統'; // 頁面標題
+$pageTitle = '班表管理 - 員工管理系統';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -39,113 +70,660 @@ $pageTitle = '班表管理 - 員工管理系統'; // 頁面標題
   <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
   <link href="css/styles.css" rel="stylesheet" />
   <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+  <!-- ✅ 下載班表圖片要用 -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" crossorigin="anonymous"></script>
 
   <style>
-    :root {
-      --primary-gradient: linear-gradient(135deg, #fbb97ce4 0%, #ff0000cb 100%);
-      --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      --success-gradient: linear-gradient(135deg, #4facfe 0%, #54bcc1 100%);
-      --warning-gradient: linear-gradient(135deg, #fbb97ce4 0%, #ff00006a 100%);
-      --dark-bg: linear-gradient(135deg, #fbb97ce4 0%, #ff00006a 100%);
-      --card-shadow: 0 15px 35px rgba(0,0,0,.1);
-      --hover-shadow: 0 25px 50px rgba(0,0,0,.15);
-      --border-radius: 20px;
-      --transition: all .3s cubic-bezier(.4,0,.2,1);
+  :root {
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 30%, #f5e9ff 100%);
+    --text-main: #0f172a;
+    --text-subtle: #64748b;
+
+    --card-bg: rgba(255, 255, 255, 0.96);
+    --card-radius: 22px;
+
+    --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+    --shadow-hover: 0 22px 60px rgba(15, 23, 42, 0.18);
+
+    --transition-main: all .25s cubic-bezier(.4, 0, .2, 1);
+  }
+
+  * {
+    transition: var(--transition-main);
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.24), transparent 55%),
+      radial-gradient(circle at 100% 0%, rgba(222, 114, 244, 0.24), transparent 55%),
+      var(--bg-gradient);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text-main);
+  }
+
+  /* =========================
+   員工可排時段 (日檢視) 專用
+   ========================= */
+
+  .gantt-card {
+    overflow: visible;
+  }
+
+  .gantt-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .gantt-header {
+    background: #e5edff;
+    border-bottom: 1px solid #93a3c7;
+  }
+
+  .gantt-header .name {
+    padding: 12px 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    border-right: 1px solid rgba(148,163,184,.6);
+  }
+
+  .gantt-row .name {
+    padding: 18px 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    background: #f8fbff;
+    border-right: 1px solid rgba(148,163,184,.35);
+    white-space: nowrap;
+  }
+
+  .gantt-row {
+    border-top: 1px solid rgba(148,163,184,.3);
+  }
+
+  .gantt-header .scale div {
+    border-left: 1px solid rgba(148,163,184,.7);
+    font-size: 0.9rem;
+    color: #111827;
+  }
+
+  .gantt-row:nth-child(odd) .track {
+    background: linear-gradient(180deg, #ffffff, #f3f6ff);
+  }
+  .gantt-row:nth-child(even) .track {
+    background: linear-gradient(180deg, #f9fafb, #edf2ff);
+  }
+
+  .gantt-grid div {
+    border-left: 1px dashed rgba(148,163,184,.6);
+  }
+
+  /* ====== Top navbar ====== */
+  .sb-topnav {
+    background: linear-gradient(120deg, #1e3a8a, #3658ff) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.42);
+    backdrop-filter: blur(18px);
+  }
+
+  .navbar-brand {
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #f9fafb !important;
+  }
+
+  .navbar-nav .nav-link {
+    color: #e5e7eb !important;
+  }
+
+  .navbar-nav .nav-link:hover {
+    color: #ffffff !important;
+  }
+
+  .container-fluid {
+    padding: 26px 28px;
+  }
+
+  /* ====== 搜尋框 ====== */
+  .search-container-wrapper { position: relative; width: 100%; max-width: 400px; }
+  .search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    padding: 4px 4px 4px 20px;
+    backdrop-filter: blur(10px);
+    border: 2px solid transparent;
+  }
+  .search-container:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+  }
+  .search-container:focus-within {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.3);
+  }
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #f9fafb;
+    font-weight: 500;
+  }
+  .search-input::placeholder {
+    color: rgba(241, 245, 249, 0.9);
+    font-weight: 400;
+  }
+  .search-btn {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(226, 232, 255, 0.95));
+    border: none;
+    border-radius: 40px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
+    position: relative;
+    overflow: hidden;
+  }
+  .search-btn i {
+    color: #2563eb;
+    font-size: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ====== Sidebar 背景 ====== */
+  .sb-sidenav {
+    background:
+      radial-gradient(circle at 40% 0%, rgba(56, 189, 248, 0.38), transparent 65%),
+      radial-gradient(circle at 80% 100%, rgba(147, 197, 253, 0.34), transparent 70%),
+      linear-gradient(180deg, rgba(220, 235, 255, 0.92), rgba(185, 205, 255, 0.9));
+    backdrop-filter: blur(22px);
+    border-right: 1px solid rgba(255, 255, 255, 0.55);
+  }
+
+  .sb-sidenav-menu-heading {
+    color: #1e293b !important;
+    opacity: 0.75;
+    font-size: 0.78rem;
+    letter-spacing: .18em;
+    margin: 20px 0 8px 16px;
+  }
+
+  .sb-sidenav .nav-link {
+    color: #0f172a !important;
+    font-weight: 600;
+    border-radius: 18px;
+    padding: 12px 18px;
+    margin: 8px 12px;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.80),
+      rgba(241, 248, 255, 0.95)
+    );
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sb-sidenav .nav-link .sb-nav-link-icon {
+    margin-right: 10px;
+    color: #1e293b !important;
+    opacity: 0.9 !important;
+    font-size: 1.05rem;
+  }
+
+  .sb-sidenav .sb-sidenav-collapse-arrow i,
+  .sb-sidenav .nav-link i.fa-chevron-right {
+    color: #1e293b !important;
+    opacity: 0.85 !important;
+  }
+
+  .sb-sidenav .nav-link:hover {
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 14px 30px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .sb-sidenav .nav-link:hover .sb-nav-link-icon,
+  .sb-sidenav .nav-link:hover .sb-sidenav-collapse-arrow i,
+  .sb-sidenav .nav-link:hover i.fa-chevron-right {
+    color: #0f172a !important;
+    opacity: 1 !important;
+  }
+
+  .sb-sidenav .nav-link.active {
+    background: linear-gradient(135deg, #4f8bff, #7b6dff);
+    border-color: rgba(255, 255, 255, 0.98);
+    color: #ffffff !important;
+    box-shadow: 0 18px 36px rgba(59, 130, 246, 0.6);
+  }
+
+  .sb-sidenav .nav-link.active .sb-nav-link-icon,
+  .sb-sidenav .nav-link.active .sb-sidenav-collapse-arrow i {
+    color: #e0f2fe !important;
+  }
+
+  .sb-sidenav-footer {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.9),
+      rgba(226, 232, 255, 0.95)
+    ) !important;
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(148, 163, 184, 0.5);
+    padding: 16px 20px;
+    color: #111827 !important;
+    box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.10);
+    font-size: 0.95rem;
+  }
+
+  .sb-sidenav-footer .small {
+    color: #6b7280 !important;
+  }
+
+  .user-avatar {
+    border: 2px solid rgba(255, 255, 255, .5);
+  }
+
+  .sb-sidenav .nav-link svg,
+  .sb-sidenav .nav-link svg path,
+  .sb-sidenav .nav-link i,
+  .sb-sidenav .nav-link::after {
+      stroke: #1e293b !important;
+      color: #1e293b !important;
+      fill: #1e293b !important;
+      opacity: 0.9 !important;
+  }
+  .sb-sidenav .nav-link:hover svg,
+  .sb-sidenav .nav-link:hover svg path,
+  .sb-sidenav .nav-link:hover i,
+  .sb-sidenav .nav-link:hover::after {
+      stroke: #0f172a !important;
+      color: #0f172a !important;
+      fill: #0f172a !important;
+      opacity: 1 !important;
+  }
+
+  /* ====== 標題 & 麵包屑 ====== */
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    background: linear-gradient(120deg, #0f172a, #2563eb);
+    -webkit-background-clip: text;
+    color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .breadcrumb {
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+  }
+
+  .breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    color: #9ca3af;
+  }
+
+  /* ====== 一般卡片 / 表格 ====== */
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(239, 246, 255, 0.96));
+    border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding-top: 14px;
+    padding-bottom: 10px;
+  }
+
+  .card-body {
+    padding: 18px 20px 20px;
+  }
+
+  footer {
+    background: transparent;
+    border-top: 1px solid rgba(148, 163, 184, 0.35);
+    margin-top: 24px;
+    padding-top: 14px;
+    font-size: 0.8rem;
+    color: var(--text-subtle);
+  }
+
+  .form-control, .form-select {
+    border-radius: 12px;
+    border-color: rgba(148, 163, 184, 0.6);
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+  }
+
+  /* ====== 按鈕 ====== */
+  .btn-primary {
+    background: linear-gradient(135deg, #4f8bff, #7b6dff);
+    border: none;
+    border-radius: 999px;
+    padding: 0.45rem 1.3rem;
+    font-weight: 600;
+    box-shadow: 0 10px 22px rgba(59, 130, 246, 0.45);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(59, 130, 246, 0.55);
+    background: linear-gradient(135deg, #436ff0, #6a5bff);
+  }
+  .btn-outline-secondary {
+    border-radius: 999px;
+    padding: 0.4rem 1.2rem;
+    border-color: rgba(148, 163, 184, 0.8);
+    color: #4b5563;
+    background: rgba(255,255,255,0.9);
+  }
+  .btn-outline-secondary:hover {
+    background: #e5e7eb;
+    color: #111827;
+  }
+
+  /* ====== Gantt 區域 ====== */
+  .gantt-toolbar {
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
+  .gantt-toolbar .btn-day {
+    min-width: 96px;
+    border-radius: 999px;
+  }
+  .gantt-legend {
+    font-size: .9rem;
+    opacity: .75;
+  }
+
+  .gantt {
+    display:inline-block;
+    min-width:1600px;
+    background:#fff;
+    border:1px solid rgba(148,163,184,.4);
+    border-radius:18px;
+    box-shadow: var(--shadow-soft);
+    overflow:hidden;
+  }
+
+  .gantt-header,
+  .gantt-row {
+    display:grid;
+    grid-template-columns: 140px 1fr;
+  }
+  .gantt-header {
+    background:#f1f5f9;
+    border-bottom:1px solid rgba(148,163,184,.4);
+  }
+  .gantt-header .times {
+    position:relative;
+    padding:10px 8px;
+    border-left:1px solid rgba(148,163,184,.4);
+  }
+ .gantt-header .scale {
+    display:grid;
+    grid-template-columns: repeat(17, 1fr); /* 6:00～22:00，共 17 格 → 最後一格代表 22–23 */
+    font-size:.85rem;
+    text-align:center;
+  }
+  .gantt-header .scale div {
+    padding:2px 0;
+  }
+  .gantt-row + .gantt-row {
+    border-top:1px solid rgba(148,163,184,.35);
+  }
+  .gantt-row .track {
+    position:relative;
+    padding:12px 8px;
+    border-left:1px solid rgba(148,163,184,.35);
+    background:linear-gradient(180deg,#ffffff,#f8fafc);
+  }
+  .gantt-grid {
+    position:absolute;
+    inset:12px 8px;
+    display:grid;
+    grid-template-columns: repeat(17, 1fr);
+  }
+  .gantt-grid div {
+    border-left:1px dashed rgba(148,163,184,.3);
+  }
+  .gantt-bar {
+    position:absolute;
+    height:28px;
+    border-radius:9px;
+    background: linear-gradient(135deg, #4f8bff, #7b6dff);
+    display:flex;
+    align-items:center;
+    padding:0 10px;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, .35);
+    font-size:.9rem;
+    color:#f9fafb;
+    white-space:nowrap;
+    cursor:pointer;
+    user-select:none;
+  }
+  .gantt-bar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 22px rgba(37, 99, 235, .5);
+    z-index: 5;
+  }
+
+  .pulse-highlight {
+    animation: pulseBg 1.4s ease-out 1;
+  }
+  @keyframes pulseBg {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, .7); }
+    100% { box-shadow: 0 0 0 18px rgba(59, 130, 246, 0); }
+  }
+
+  .chip-highlight {
+    animation: highlight-chip 1.5s ease;
+  }
+
+  @keyframes highlight-chip {
+    0% {
+      background-color: #bfdbfe !important;
+      transform: scale(1.15);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
     }
-    *{transition:var(--transition)}
-    body{background:linear-gradient(135deg,#fff 0%,#fff 100%);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;min-height:100vh}
-    .sb-topnav{background:var(--dark-bg)!important;border:none;box-shadow:var(--card-shadow);backdrop-filter:blur(10px)}
-    .navbar-brand{font-weight:700;font-size:1.5rem;background:linear-gradient(45deg,#fff,#fff);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
-    
-    /* 搜尋框 (from 員工資料表.php) */
-    .search-container-wrapper { position: relative; width: 100%; max-width: 400px; }
-    .search-container { position: relative; display: flex; align-items: center; background: rgba(255, 255, 255, 0.15); border-radius: 50px; padding: 4px 4px 4px 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(10px); border: 2px solid transparent; }
-    .search-container:hover { background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.3); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); }
-    .search-container:focus-within { background: rgba(255, 255, 255, 0.25); border-color: rgba(255, 255, 255, 0.5); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); }
-    .search-input { flex: 1; border: none; outline: none; background: transparent; padding: 10px 12px; font-size: 14px; color: #fff; font-weight: 500; }
-    .search-input::placeholder { color: rgba(255, 255, 255, 0.7); font-weight: 400; }
-    .search-btn { background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%); border: none; border-radius: 40px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); position: relative; overflow: hidden; }
-    .search-btn::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(251, 185, 124, 0.3); transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; }
-    .search-btn:hover::before { width: 80px; height: 80px; }
-    .search-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
-    .search-btn:active { transform: scale(0.95); }
-    .search-btn i { color: #ff6b6b; font-size: 16px; position: relative; z-index: 1; }
-
-    /* Sidenav (from 員工資料表.php) */
-    .sb-sidenav{background:linear-gradient(180deg,#fbb97ce4 0%,#ff00006a 100%)!important;box-shadow:var(--card-shadow);backdrop-filter:blur(10px)}
-    .sb-sidenav-menu-heading{color:rgba(255,255,255,.7)!important;font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:1px;padding:20px 15px 10px!important;margin-top:15px}
-    .sb-sidenav .nav-link{border-radius:15px;margin:5px 15px;padding:12px 15px;position:relative;overflow:hidden;color:rgba(255,255,255,.9)!important;font-weight:500;backdrop-filter:blur(10px)}
-    .sb-sidenav .nav-link:hover{background:rgba(255,255,255,.15)!important;transform:translateX(8px);box-shadow:0 8px 25px rgba(0,0,0,.2);color:#fff!important}
-    .sb-sidenav .nav-link.active{background:rgba(255,255,255,.2)!important;color:#fff!important;font-weight:600;box-shadow:0 8px 25px rgba(0,0,0,.15)}
-    .sb-sidenav .nav-link::before{content:'';position:absolute;left:0;top:0;height:100%;width:4px;background:linear-gradient(45deg,#fff,#fff);transform:scaleY(0);border-radius:0 10px 10px 0}
-    .sb-sidenav .nav-link:hover::before,.sb-sidenav .nav-link.active::before{transform:scaleY(1)}
-    .sb-sidenav .nav-link i{width:20px;text-align:center;margin-right:10px;font-size:1rem}
-    .sb-sidenav-menu-nested .nav-link{padding-left:45px;font-size:.9rem;background:rgba(255,255,255,.05)!important;margin:2px 15px;border-radius:10px}
-    .sb-sidenav-menu-nested .nav-link:hover{background:rgba(255,255,255,.1)!important;transform:translateX(5px);padding-left:50px}
-    .sb-sidenav-footer{background:rgba(255,255,255,.1)!important;color:#fff!important;border-top:1px solid rgba(255,255,255,.2);padding:20px 15px;margin-top:20px}
-    .sb-sidenav-footer .small{color:rgba(255,255,255,.7)!important;font-size:.8rem}
-    .user-avatar{border:2px solid rgba(255,255,255,.5)}
-
-    /* 內容區 */
-    .container-fluid{padding:30px!important}
-    h1{background:var(--primary-gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:700;font-size:2.5rem;margin-bottom:30px}
-    .card{border:none;border-radius:var(--border-radius);box-shadow:var(--card-shadow);backdrop-filter:blur(10px);background:rgba(255,255,255,.9);overflow:hidden;position:relative}
-    .card:hover{transform:translateY(-10px);box-shadow:var(--hover-shadow)}
-    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--primary-gradient)}
-    .card-header{background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,255,255,.7));border:none;padding:20px;font-weight:600;border-radius:var(--border-radius) var(--border-radius) 0 0!important}
-    .card-body{padding:25px}
-    
-    .table{border-radius:var(--border-radius);overflow:hidden;background:#fff}
-    .table thead th{background:var(--primary-gradient);color:#000;border:none;font-weight:600;padding:15px;text-align:center;vertical-align:middle;white-space:nowrap}
-    .table tbody td{padding:15px;vertical-align:middle;border-color:rgba(0,0,0,.05);text-align:center;white-space:nowrap}
-    .table tbody tr:hover{background:rgba(227,23,111,.05)}
-    
-    .breadcrumb{background:rgba(255,255,255,.8);border-radius:var(--border-radius);padding:15px 20px;box-shadow:var(--card-shadow);backdrop-filter:blur(10px)}
-    footer{background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,255,255,.7))!important;border-top:1px solid rgba(0,0,0,.1);backdrop-filter:blur(10px)}
-    
-    /* 按鈕 (from 員工資料表.php) */
-    .btn-primary { background: var(--primary-gradient); border: none; border-radius: 25px; padding: 0.5rem 1.25rem; color: #fff; }
-    .btn-primary:hover { transform: scale(1.05); box-shadow: 0 10px 25px rgba(209, 209, 209, 0.976); background: var(--primary-gradient); color: #fff; }
-    .btn-outline-secondary { border-radius: 25px; padding: 0.5rem 1.25rem; }
-    .form-control { border-radius: 12px; }
-
-    /* ====== Gantt（日檢視）====== */
-    .gantt-toolbar { gap: .5rem; flex-wrap: wrap; }
-    .gantt-toolbar .btn-day { min-width: 96px; }
-    .gantt-legend { font-size: .9rem; opacity: .75; }
-    .gantt { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:12px; box-shadow: var(--card-shadow); overflow:hidden; }
-    .gantt-header, .gantt-row { display:grid; grid-template-columns: 140px 1fr; }
-    .gantt-header { background:#f8f9fa; border-bottom:1px solid rgba(0,0,0,.06); }
-    .gantt-header .times { position:relative; padding:10px 8px; border-left:1px solid rgba(0,0,0,.06); }
-    .gantt-header .scale { display:grid; grid-template-columns: repeat(15, 1fr); font-size:.85rem; text-align:center; }
-    .gantt-header .scale div { border-left:1px dashed rgba(0,0,0,.07); padding:2px 0; }
-    .gantt-row + .gantt-row { border-top:1px solid rgba(0,0,0,.06); }
-    .gantt-row .name { padding:10px 12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; background:#fff; }
-    .gantt-row .track { position:relative; padding:12px 8px; border-left:1px solid rgba(0,0,0,.06); background:linear-gradient(180deg,#fff,#fff); }
-    .gantt-grid { position:absolute; inset:12px 8px; display:grid; grid-template-columns: repeat(15, 1fr); }
-    .gantt-grid div { border-left:1px dashed rgba(0,0,0,.06); }
-    .gantt-bar { position:absolute; height:28px; border-radius:8px; background: var(--success-gradient); display:flex; align-items:center; padding:0 10px; box-shadow: 0 6px 16px rgba(0,0,0,.12); font-size:.9rem; color:#fff; white-space:nowrap; cursor:pointer; }
-
-    /* 點擊後捲到編輯格子時的「亮一下」 */
-    .pulse-highlight { animation: pulseBg 1.4s ease-out 1; }
-    @keyframes pulseBg {
-      0% { box-shadow: 0 0 0 0 rgba(79,172,254,.6); }
-      100% { box-shadow: 0 0 0 18px rgba(79,172,254,0); }
+    50% {
+      background-color: #bfdbfe !important;
+      transform: scale(1.08);
     }
-    
-    /* 編輯區的 Badge (Chip) */
-    .assign-chip { font-size: 0.9rem; padding: 6px 6px 6px 10px; }
-    .assign-chip .chip-btn {
-        padding: 0;
-        margin: 0;
-        width: 18px;
-        height: 18px;
-        font-size: 11px;
-        line-height: 18px;
-        border-radius: 50%;
-        opacity: 0.7;
+    100% {
+      background-color: #2563eb !important;
+      transform: scale(1);
+      box-shadow: none;
     }
-    .assign-chip .chip-btn:hover { opacity: 1; }
+  }
+
+  .cell-flash {
+    animation: flash-cell 1.5s ease;
+  }
+  @keyframes flash-cell {
+    0% {
+      background-color: #dbeafe;
+      box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: none;
+    }
+  }
+
+  .assign-chip {
+    font-size: 0.9rem;
+    padding: 6px 6px 6px 10px;
+    border-radius: 999px;
+    background-color: #2563eb;
+    color: #f9fafb;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+  }
+  .assign-chip .chip-btn {
+    padding: 0;
+    margin: 0;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    line-height: 18px;
+    border-radius: 50%;
+    opacity: 0.8;
+    border: none;
+  }
+  .assign-chip .chip-btn:hover {
+    opacity: 1;
+  }
+
+  .table {
+    border-radius: 18px;
+    overflow: hidden;
+    background:#ffffff;
+  }
+  .table thead th {
+    background: linear-gradient(135deg, #e5edff, #dbeafe);
+    border-bottom: 1px solid rgba(148,163,184,.5);
+    color: #1e293b;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    padding: 12px 10px;
+  }
+  .table tbody td, .table tbody th {
+    padding: 12px 10px;
+    vertical-align: middle;
+    border-color: rgba(148,163,184,.25);
+    text-align: center;
+  }
+  .table tbody tr:hover {
+    background: rgba(219, 234, 254, 0.6);
+  }
+
+  /* ===== 本週班表預覽（當前週班表）===== */
+  .weekly-preview-table {
+    border-radius: 18px;
+    overflow: hidden;
+    background: #ffffff;
+  }
+  .weekly-preview-table thead th {
+    background: linear-gradient(135deg, #4f8bff, #7b6dff);
+    border-bottom: none;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 12px 10px;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  .weekly-preview-table thead .preview-name-header {
+    text-align: left;
+    padding-left: 18px;
+  }
+  .weekly-preview-table .preview-name-cell {
+    background: #f8fbff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: left;
+    padding: 10px 14px;   /* 🔹縮小高度 */
+    min-width: 110px;     /* 🔹縮窄寬度 */
+    max-width: 140px;     /* 🔹避免字太長撐開 */
+    border-right: 1px solid rgba(148,163,184,.35);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 🔹字太長用 ... */
+  }
+
+  .weekly-preview-table tbody td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 14px 10px;
+    border-color: rgba(148,163,184,.25);
+    color: #4b5563;
+  }
+  .weekly-preview-table tbody tr:nth-child(odd) td {
+    background: #ffffff;
+  }
+  .weekly-preview-table tbody tr:nth-child(even) td {
+    background: #f9fafb;
+  }
+  .weekly-preview-table tbody tr:hover td,
+  .weekly-preview-table tbody tr:hover .preview-name-cell {
+    background: rgba(219,234,254,.7);
+  }
+
+  /* 🔹 班次 badge：沿用新增班表的樣式 */
+  .badge-shift {
+    display: inline-block;
+    min-width: 70px;
+    padding: 4px 10px;
+    border-radius: 18px;
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.35);
+    color: #1d4ed8;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+    white-space: nowrap;
+  }
+
+  .badge-off {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    padding: 4px 12px;
+    border-radius: 16px;
+    background: rgba(148,163,184,0.22);
+    border: 1px dashed rgba(148,163,184,0.9);
+    color: #374151;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  /* ====== RWD ====== */
+  @media (max-width: 992px) {
+    .container-fluid {
+      padding: 20px 16px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding: 16px 12px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+    }
+  }
+  
   </style>
 </head>
 
@@ -154,29 +732,21 @@ $pageTitle = '班表管理 - 員工管理系統'; // 頁面標題
     <a class="navbar-brand ps-3" href="index.php">員工管理系統</a>
     <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
 
-    <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-        <div class="search-container-wrapper">
-            <div class="search-container">
-                <input class="search-input" type="text" placeholder="搜尋..." aria-label="Search" />
-                <button class="search-btn" id="btnNavbarSearch" type="button">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
-        </div>
-    </form>
+    <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0"></form>
 
     <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <img class="user-avatar rounded-circle me-1" src="https://i.pravatar.cc/40?u=<?php echo urlencode($userName); ?>" width="28" height="28" alt="User Avatar" style="vertical-align:middle;">
-                <span id="navUserName"><?php echo htmlspecialchars($userName); ?></span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="帳號設置.php">帳號設置</a></li>
-                <li><hr class="dropdown-divider" /></li>
-                <li><a class="dropdown-item" href="logout.php"><i class="fas fa-right-from-bracket me-2"></i>登出</a></li>
-            </ul>
-        </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <!-- 預設先用 pravatar，稍後 JS 會用 API 頭像覆蓋 -->
+          <img class="user-avatar rounded-circle me-1" src="https://i.pravatar.cc/40?u=<?php echo urlencode($userName); ?>" width="28" height="28" alt="User Avatar" style="vertical-align:middle;">
+          <span id="navUserName"><?php echo htmlspecialchars($userName); ?></span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+          <li><a class="dropdown-item" href="帳號設置.php">帳號設置</a></li>
+          <li><hr class="dropdown-divider" /></li>
+          <li><a class="dropdown-item" href="logout.php"><i class="fas fa-right-from-bracket me-2"></i>登出</a></li>
+        </ul>
+      </li>
     </ul>
   </nav>
 
@@ -186,25 +756,39 @@ $pageTitle = '班表管理 - 員工管理系統'; // 頁面標題
         <div class="sb-sidenav-menu">
           <div class="nav">
             <div class="sb-sidenav-menu-heading">Core</div>
-            <a class="nav-link" href="index.php">
+            <a class="nav-link active" href="index.php">
               <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>首頁
             </a>
 
             <div class="sb-sidenav-menu-heading">Pages</div>
-            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="true">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false">
               <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>人事管理
               <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
             </a>
-            <div class="collapse show" id="collapseLayouts" data-bs-parent="#sidenavAccordion">
-              <nav class="sb-sidenav-menu-nested nav">
-                <a class="nav-link" href="員工資料表.php">員工資料表</a>
-                <a class="nav-link active" href="班表管理.php">班表管理</a>
-                <a class="nav-link" href="日報表記錄.html">日報表記錄</a>
-                <a class="nav-link" href="假別管理.php">假別管理</a>
-                <a class="nav-link" href="打卡管理.php">打卡管理</a>
-                <a class="nav-link" href="薪資管理.html">薪資管理</a>
-              </nav>
-            </div>
+<div class="collapse" id="collapseLayouts" data-bs-parent="#sidenavAccordion">
+  <nav class="sb-sidenav-menu-nested nav">
+
+    <?php if ($userLevel === 'A'): ?>
+      <!-- 只有 A 級（老闆）可以看到 -->
+      <a class="nav-link" href="員工資料表.php">員工資料表</a>
+    <?php endif; ?>
+
+    <a class="nav-link" href="班表管理.php">班表管理</a>
+     <?php if ($userLevel === 'A'): ?>
+      <!-- 只有 A 級（老闆）可以看到 -->
+      <a class="nav-link" href="日報表記錄.php">日報表記錄</a>
+    <?php endif; ?>   
+    <a class="nav-link" href="假別管理.php">假別管理</a>
+    <a class="nav-link" href="打卡管理.php">打卡管理</a>
+
+    <?php if ($userLevel === 'A'): ?>
+      <!-- 只有 A 級（老闆）可以看到 -->
+      <a class="nav-link" href="薪資管理.php">薪資管理</a>
+    <?php endif; ?>
+
+  </nav>
+</div>
+
 
             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOperation" aria-expanded="false">
               <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>營運管理
@@ -220,15 +804,13 @@ $pageTitle = '班表管理 - 員工管理系統'; // 頁面標題
                   <nav class="sb-sidenav-menu-nested nav">
                     <a class="nav-link" href="庫存查詢.php">庫存查詢</a>
                     <a class="nav-link" href="庫存調整.php">庫存調整</a>
+                    <a class="nav-link" href="商品管理.php">商品管理</a>
                   </nav>
                 </div>
-                <a class="nav-link" href="日報表.html"><div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
-                <a class="nav-link" href="薪資管理.html"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
-                <a class="nav-link" href="班表.html"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
-              </nav>
-            </div>
 
-            <a class="nav-link" href="請假申請.php"><div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>請假申請</a>
+                <a class="nav-link" href="日報表.php"><div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
+                  </nav>
+            </div>
 
             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseWebsite" aria-expanded="false">
               <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>網站管理
@@ -252,10 +834,11 @@ $pageTitle = '班表管理 - 員工管理系統'; // 頁面標題
             </div>
 
             <div class="sb-sidenav-menu-heading">Addons</div>
-            <a class="nav-link" href="charts.php"><div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>Charts</a>
+            <a class="nav-link" href="charts.php">
+              <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>Charts
+            </a>
           </div>
         </div>
-
         <div class="sb-sidenav-footer">
           <div class="small">Logged in as:</div>
           <span id="loggedAs"><?php echo htmlspecialchars($userName); ?></span>
@@ -263,85 +846,147 @@ $pageTitle = '班表管理 - 員工管理系統'; // 頁面標題
       </nav>
     </div>
 
+    <!-- Content -->
     <div id="layoutSidenav_content">
       <main>
         <div class="container-fluid">
+          <!-- 標題與日期 -->
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>班表管理</h1>
-            <div class="text-muted"><i class="fas fa-calendar-alt me-2"></i><span id="currentDate"></span></div>
+            <div class="text-muted">
+              <i class="fas fa-calendar-alt me-2"></i>
+              <span id="currentDate"></span>
+            </div>
           </div>
 
+          <!-- 麵包屑 -->
           <ol class="breadcrumb mb-4">
-            <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">首頁</a></li>
+            <li class="breadcrumb-item"><a href="<?php echo ($userLevel === 'A') ? 'index.php' : 'indexB.php'; ?>" class="text-decoration-none">首頁</a></li>
             <li class="breadcrumb-item active">班表管理</li>
           </ol>
 
-          <div class="d-flex justify-content-start align-items-center gap-2 mb-4">
-            <select id="yearSelect" class="form-select" style="width: 100px;"></select>
-            <select id="monthSelect" class="form-select" style="width: 100px;"></select>
-            <select id="daySelect" class="form-select" style="width: 100px;"></select>
-            <button class="btn btn-primary" id="btnQuery">查詢</button>
+          <!-- 系統狀態 (測試用) -->
+          <div class="alert alert-info mb-4">
+            <strong>系統狀態:</strong> 
+            用戶: <?php echo htmlspecialchars($userName); ?> | 
+            ID: <?php echo htmlspecialchars($userId); ?> | 
+            等級: <?php echo htmlspecialchars($userLevel); ?>級
           </div>
 
-          <div class="card mb-4">
-            <div class="card-header"><i class="fas fa-calendar-alt me-2"></i>本週班表（唯讀）</div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-bordered table-hover text-center align-middle">
-                  <thead id="weekHeader"></thead>
-                  <tbody id="currentScheduleTable"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-          
-          <div class="card mb-4" id="ganttCard">
-            <div class="card-header d-flex align-items-center justify-content-between">
-              <div><i class="fas fa-user-clock me-2"></i>可排人員甘特圖（按日檢視）</div>
-              <div class="gantt-legend">
-                <i class="fas fa-square me-1" style="color:#54bcc1;"></i> 想排時段（點一下即可加入下方編輯）
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="d-flex gantt-toolbar mb-3" id="dayBtnGroup"></div>
-              <div class="gantt" id="ganttContainer"></div>
-            </div>
-          </div>
+          <!-- 本週班表預覽（跟新增班表的當前週班表一樣） -->
+          <div class="card mb-4" id="scheduleViewCard">
+            <div class="card-header">
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="d-flex align-items-center me-auto">
+                  <i class="fas fa-calendar-alt me-2"></i>
+                  <span>當前週班表(唯讀)</span>
+                </div>
 
-          <div class="card" id="editorCard">
-            <div class="card-header d-flex align-items-center justify-content-between">
-              <div><i class="fas fa-edit me-2"></i>編輯班表（草稿｜可新增/修改）</div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm" id="btnClearDraft"><i class="fas fa-eraser me-1"></i>清空草稿</button>
-                <button class="btn btn-primary btn-sm" id="btnSaveDraft"><i class="fas fa-save me-1"></i>儲存班表</button>
+                <!-- 週切換按鈕：上週 / 本週 / 下週 -->
+                <div class="btn-group me-2" role="group" aria-label="week switch">
+                  <button class="btn btn-outline-secondary" id="btnPrevWeek">
+                    <i class="fas fa-chevron-left me-1"></i>上週
+                  </button>
+                  <button class="btn btn-outline-secondary" id="btnNextWeek">
+                    本週
+                  </button>
+                  <button class="btn btn-outline-secondary" id="btnNextNextWeek">
+                    下週<i class="fas fa-chevron-right ms-1"></i>
+                  </button>
+                </div>
+
+                <!-- 右邊：週期 + 下載班表圖片 -->
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-muted">週期:</span>
+                  <strong id="weekRangeText">--</strong>
+                  <button class="btn btn-primary ms-2" id="btnDownloadPng">
+                    <i class="fas fa-image me-2"></i>下載班表圖片
+                  </button>
+                </div>
               </div>
             </div>
+
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-bordered align-middle" id="editorTable">
-                  <thead class="table-light">
-                    <tr id="editorHeaderRow"><th style="width:100px">時段</th></tr>
+                <table class="table weekly-preview-table text-center align-middle">
+                  <thead>
+                    <tr id="previewHeaderRow">
+                      <th class="preview-name-header">員工</th>
+                      <!-- JS 動態加 7 天 -->
+                    </tr>
                   </thead>
-                  <tbody id="editorBody"></tbody>
+                  <tbody id="previewBody"></tbody>
                 </table>
               </div>
-              <div class="small text-muted">每格可「+ 新增」或點名字旁的✎修改、×移除；儲存後會同步更新上方唯讀班表。</div>
+              <div class="small text-muted" id="previewHint">※ 本區塊僅供瀏覽,不可編輯。</div>
+            </div>
+          </div>
+
+          <!-- 员工可排時段總覽 (日檢視) -->
+          <div class="card mb-4 gantt-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span>
+                <i class="fas fa-users-clock me-2"></i>員工可排時段 
+                <span class="badge bg-primary ms-2" style="font-size: 0.75rem;">點擊藍色條 → 快速添加</span>
+              </span>
+              <div class="gantt-toolbar d-flex" id="ganttDayButtons">
+                <!-- 動態生成 7 個按鈕 -->
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-info mb-3 py-2">
+                <i class="fas fa-lightbulb me-2"></i>
+                <strong>使用提示:</strong>直接點擊藍色時間條,該員工會立即出現在下方編輯班表中!
+              </div>
+
+              <div class="gantt-scroll">
+                <div id="ganttChart" class="gantt">
+                  <!-- 動態生成 Gantt 圖 -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 編輯班表 (週檢視) -->
+          <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="fas fa-calendar-check me-2"></i>編輯班表</span>
+              <div>
+                <button class="btn btn-outline-secondary btn-sm me-2" id="btnClearDraft">
+                  <i class="fas fa-eraser me-1"></i>清空草稿
+                </button>
+                <button class="btn btn-primary btn-sm" id="btnSaveDraft">
+                  <i class="fas fa-save me-1"></i>儲存班表
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered">
+                  <thead>
+                    <tr id="editorHeaderRow">
+                      <th style="min-width:100px">時段</th>
+                      <!-- 動態生成 7 個日期欄 -->
+                    </tr>
+                  </thead>
+                  <tbody id="editorBody">
+                    <!-- 動態生成 -->
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
         </div>
       </main>
 
+      <!-- Footer -->
       <footer class="py-4 bg-light mt-auto">
         <div class="container-fluid px-4">
           <div class="d-flex align-items-center justify-content-between small">
-            <div class="text-muted">© 2024 令和博多餐廳管理系統 - Xxing0625</div>
+            <div class="text-muted">Copyright &copy; Xxing 0625</div>
             <div>
-              <a href="#" class="text-decoration-none">隱私政策</a>
-              <span class="mx-2">•</span>
-              <a href="#" class="text-decoration-none">使用條款</a>
-              <span class="mx-2">•</span>
-              <a href="#" class="text-decoration-none">技術支援</a>
+              <a href="#">Privacy Policy</a> &middot; <a href="#">Terms &amp; Conditions</a>
             </div>
           </div>
         </div>
@@ -349,580 +994,1008 @@ $pageTitle = '班表管理 - 員工管理系統'; // 頁面標題
     </div>
   </div>
 
-  <div class="modal fade" id="slotModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+  <!-- 新增/修改人員 Modal -->
+  <div class="modal fade" id="assignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><span id="modalDate"></span>・<span id="modalPeriod"></span> 的可排名單</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+          <h5 class="modal-title" id="assignModalTitle">新增人員</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <div class="alert alert-light border">點「姓名＋時段」按鈕即可加入/移除【編輯班表】草稿。</div>
-          <div id="candidateArea" class="d-flex flex-wrap"></div>
-        </div>
-        <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">完成</button></div>
+        <form id="assignForm">
+          <div class="modal-body">
+            <input type="hidden" id="assignDs" />
+            <input type="hidden" id="assignPeriod" />
+            <input type="hidden" id="assignOriginalName" />
+            
+            <div class="mb-3">
+              <label class="form-label">姓名</label>
+              <select class="form-select" id="assignNameSelect" required>
+                <option value="">請選擇員工</option>
+              </select>
+            </div>
+            
+            <div class="row">
+              <div class="col-6">
+                <label class="form-label">開始時間</label>
+                <input type="time" class="form-control" id="assignStart" required />
+              </div>
+              <div class="col-6">
+                <label class="form-label">結束時間</label>
+                <input type="time" class="form-control" id="assignEnd" required />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="submit" class="btn btn-primary">確定</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 
-  <div class="modal fade" id="assignModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form class="modal-content" id="assignForm">
-        <div class="modal-header">
-          <h5 class="modal-title" id="assignModalTitle">新增人員</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="assignDs">
-          <input type="hidden" id="assignPeriod">
-          <input type="hidden" id="assignOriginalName">
-
-          <div class="mb-3">
-            <label class="form-label">姓名</label>
-            <select class="form-select" id="assignNameSelect" required>
-                </select>
-          </div>
-
-          <div class="row g-2">
-            <div class="col-6">
-              <label class="form-label">開始時間</label>
-              <input type="time" class="form-control" id="assignStart" required>
-            </div>
-            <div class="col-6">
-              <label class="form-label">結束時間</label>
-              <input type="time" class="form-control" id="assignEnd" required>
-            </div>
-          </div>
-
-          <div class="form-text mt-2">儲存後此人會出現在該日「編輯班表」欄位。</div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">取消</button>
-          <button class="btn btn-primary" type="submit">儲存</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
+  <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-
+  <script src="js/scripts.js"></script>
+  
   <script>
-    /* ========= 基本設定 (此頁面JS用) ========= */
-    const PERIODS = ['上午','晚上'];
-    // API 檔案 (甘特圖.php, 確認班表.php) 應與此頁面在同一層
-    const BASE_URL = ''; 
-    const DEFAULT_HEADERS = { 'Content-Type':'application/json' };
+    // 🔥 注入 PHP 變數
+    const PHP_USER_NAME   = <?php echo json_encode($userName,   JSON_UNESCAPED_UNICODE); ?>;
+    const PHP_USER_ID     = <?php echo json_encode($userId,     JSON_UNESCAPED_UNICODE); ?>;
+    const PHP_USER_LEVEL  = <?php echo json_encode($userLevel,  JSON_UNESCAPED_UNICODE); ?>;
+    const API_BASE        = <?php echo json_encode($API_BASE_URL,  JSON_UNESCAPED_SLASHES); ?>;
+    const DATA_BASE       = <?php echo json_encode($DATA_BASE_URL, JSON_UNESCAPED_SLASHES); ?>;
 
-    async function fetchJSON(path, options = {}) {
+    console.log('✅ 班表管理頁面載入:', PHP_USER_NAME, 'ID:', PHP_USER_ID, 'Level:', PHP_USER_LEVEL);
+
+    // ===== 載入登入者資訊 & 頭像 =====
+    async function loadLoggedInUser() {
+      const userName = PHP_USER_NAME;
+      const userId   = PHP_USER_ID;
+
+      console.log('✅ 班表管理 - 已登入:', userName, 'ID:', userId);
+
+      // 更新右下角 Logged in as
+      const loggedAs = document.getElementById('loggedAs');
+      if (loggedAs) loggedAs.textContent = userName;
+
+      // 更新右上角名字
+      const navName = document.getElementById('navUserName');
+      if (navName) navName.textContent = userName;
+
+      // 從 /api/me.php 抓真正的頭像
       try {
-        // 呼叫同層的 API
-        const res = await fetch(BASE_URL + path, { headers: DEFAULT_HEADERS, credentials:'include', ...options });
-        if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
-        return await res.json();
-      } catch (err) { console.warn('[API ERROR]', path, err); return null; }
-    }
-
-    /* ========= 日期 util ========= */
-    function getMonday(d=new Date()){ const x=new Date(d); const dow=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-dow); return x; }
-    function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
-    function fmt(d){ return d.toISOString().slice(0,10); }
-    function daysOfWeek(monday){ const a=[]; for(let i=0;i<7;i++) a.push(addDays(monday,i)); return a; }
-
-    /* ========= 狀態 ========= */
-    let scheduleAssignedMap = {}; // 已發布 (來自 確認班表.php)
-    let draftAssignedMap = {};    // 草稿 (本地編輯用)
-    let availabilityDetail = {};  // 可排 (來自 甘特圖.php)
-    let employeeList = [];        // 🔥【問題一修正】全體員工清單 (來自 api_get_employees.php)
-
-    function ensureDraftKey(ds){ draftAssignedMap[ds] = draftAssignedMap[ds] || { '上午':[], '晚上':[] }; }
-    function inDraft(ds, period, name){ return (draftAssignedMap[ds]?.[period] || []).some(x => x.name === name); }
-
-    function addToDraft(ds, period, name, time){
-      ensureDraftKey(ds);
-      if (!inDraft(ds, period, name)) {
-        draftAssignedMap[ds][period].push({name, time});
-        renderEditorCell(ds, period);
-      }
-    }
-    function removeFromDraft(ds, period, name){
-      ensureDraftKey(ds);
-      draftAssignedMap[ds][period] = draftAssignedMap[ds][period].filter(x => x.name !== name);
-      renderEditorCell(ds, period);
-    }
-    function upsertDraft(ds, period, name, time, originalName=null){
-      ensureDraftKey(ds);
-      const list = draftAssignedMap[ds][period];
-      const targetIdx = list.findIndex(x => x.name === (originalName || name));
-      if (targetIdx === -1) list.push({name, time});
-      else {
-        list[targetIdx] = {name, time};
-        for (let i=list.length-1;i>=0;i--){ if (i!==targetIdx && list[i].name===name) list.splice(i,1); }
-      }
-      renderEditorCell(ds, period);
-    }
-
-    /* ========= UI 初始化 (日期) ========= */
-    const yearSelect = document.getElementById('yearSelect');
-    const monthSelect = document.getElementById('monthSelect');
-    const daySelect   = document.getElementById('daySelect');
-    
-    // 🔥【已修改】預設日期為 7 天後 (下週)
-    function initDateSelectors(){
-      const defaultDate = new Date();
-      defaultDate.setDate(defaultDate.getDate() + 7);
-      
-      const y0 = defaultDate.getFullYear();
-      const m0 = defaultDate.getMonth() + 1;
-      const d0 = defaultDate.getDate();
-
-      for(let y=y0-3;y<=y0+3;y++) yearSelect.insertAdjacentHTML('beforeend', `<option value="${y}" ${y===y0?'selected':''}>${y}</option>`);
-      for(let m=1;m<=12;m++) monthSelect.insertAdjacentHTML('beforeend', `<option value="${String(m).padStart(2,'0')}" ${m===m0?'selected':''}>${m}</option>`);
-      for(let d=1;d<=31;d++) daySelect.insertAdjacentHTML('beforeend', `<option value="${String(d).padStart(2,'0')}" ${d===d0?'selected':''}>${d}</option>`);
-    }
-    function selectedDate(){ return new Date(+yearSelect.value, +monthSelect.value-1, +daySelect.value); }
-
-    /* ========= 🔥【問題一修正】載入全體員工清單 ========= */
-    async function loadEmployeeList() {
-        const result = await fetchJSON(`api_get_employees.php`);
-        if (result && result.success) {
-            employeeList = result.data; // 儲存全域 [ {id: 1, name: "王小明"}, ... ]
-            console.log('✅ 員工清單載入成功:', employeeList.length, '人');
-        } else {
-            console.error('載入員工清單失敗');
-            alert('無法載入員工下拉選單，請檢查 api_get_employees.php');
-        }
-    }
-
-
-   /* ========= 上方：已發布（唯讀） ========= */ 
-    function renderWeekHeader(monday){
-      const weekHeader = document.getElementById('weekHeader');
-      const weekday = ['星期一','星期二','星期三','星期四','星期五','星期六','星期日'];
-      const cells = daysOfWeek(monday).map((d,i)=>`<th>${weekday[i]}<br>${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}</th>`);
-      weekHeader.innerHTML = `<tr><th style="width:100px">時段</th>${cells.join('')}</tr>`;
-    }
-
-    async function loadSchedulePreview(monday) {
-      const y = yearSelect.value, m = monthSelect.value, d = daySelect.value;
-      const date = `${y}-${m}-${d}`;
-      
-      scheduleAssignedMap = {};
-      const tbody = document.getElementById('currentScheduleTable');
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">載入中...</td></tr>`;
-
-      const dates = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(monday);
-        d.setDate(d.getDate() + i);
-        return fmt(d);
-      });
-
-      try {
-        // 🔥【問題二修正】加入 cache-buster (時間戳)
-        const cacheBuster = `&_=${new Date().getTime()}`;
-        const data = await fetchJSON(`確認班表.php?date=${date}${cacheBuster}`); 
-        
-        if (!Array.isArray(data) || data.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">沒有資料</td></tr>`;
-          return;
-        }
-
-        const rowHtmls = [];
-        data.forEach(apiRow => {
-          const period = apiRow.timeSlot; 
-          if (!PERIODS.includes(period)) return; 
-          let cellsHtml = '';
-          (apiRow.days || []).forEach((cellContent, dayIndex) => {
-            const ds = dates[dayIndex]; 
-            if (!scheduleAssignedMap[ds]) {
-                scheduleAssignedMap[ds] = { '上午': [], '晚上': [] };
+        const r = await fetch(API_BASE + '/me.php', { credentials: 'include' });
+        if (r.ok) {
+          const data = await r.json();
+          if (data.avatar_url) {
+            const avatarUrl = data.avatar_url + (data.avatar_url.includes('?') ? '&' : '?') + 'v=' + Date.now();
+            const avatarImg = document.querySelector('.navbar .user-avatar');
+            if (avatarImg) {
+              avatarImg.src = avatarUrl;
+              console.log('✅ 班表管理頭像已更新:', avatarUrl);
             }
-            const items = (cellContent || '').split('<br>').filter(Boolean);
-            items.forEach(item => {
-              const match = item.match(/^(.*?)\s*\((.*?)\)$/); 
-              if (match) {
-                const name = match[1].trim();
-                const time = match[2].trim();
-                scheduleAssignedMap[ds][period].push({ name, time });
-              }
-            });
-            cellsHtml += `<td style="white-space:pre-line">${cellContent || ''}</td>`;
-          });
-          rowHtmls.push(`<tr><th class="bg-light">${period}</th>${cellsHtml}</tr>`);
-        });
-        tbody.innerHTML = rowHtmls.join('');
-      } catch (e) {
-        console.error('載入班表發生錯誤:', e);
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">載入失敗：${e.message}</td></tr>`;
-      }
-    }
-
-    /* ========= 甘特圖 (可排) ========= */
-    async function loadAvailability(monday){
-      availabilityDetail = {};
-      // 載入可排時，不再需要順便抓員工清單 (datalist)
-      
-      for (const d of daysOfWeek(monday)) {
-        const ds = fmt(d);
-        try {
-          const data = await fetchJSON(`甘特圖.php?date=${ds}`);
-          if(!data || Array.isArray(data.error)) {
-             console.warn('載入可排班資料失敗', ds, data?.error);
-             continue;
           }
-          for (const item of data) {
-            const key = `${ds}::${item.period}`; 
-            if (!availabilityDetail[key]) availabilityDetail[key] = [];
-            availabilityDetail[key].push({ name: item.name, time: item.time });
-            // allNames.add(item.name.trim()); // 🔥 已移除
-          }
-        } catch (err) {
-          console.warn('載入可排班資料失敗', ds, err);
         }
+      } catch (e) {
+        console.warn('班表管理載入頭像失敗:', e);
       }
+    }
+
+    // ===== 基本設定 =====
+    const PERIODS = ['上午', '晚上'];
+    let availabilityDetail = {};
+    let scheduleAssignedMap = {};
+    let draftAssignedMap = {};
+    let allEmployees = [];
+
+    // ===== 日期工具函數 =====
+    function getMonday(d = new Date()) {
+      const date = new Date(d);
+      const day = (date.getDay() + 6) % 7;
+      date.setDate(date.getDate() - day);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    }
+
+    function fmt(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function addDays(d, n) {
+      const x = new Date(d);
+      x.setDate(x.getDate() + n);
+      return x;
+    }
+
+    function daysOfWeek(monday) {
+      return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+    }
+
+    // ✅ 週期顯示：與新增班表一致，YYYY/MM/DD - YYYY/MM/DD
+    function renderWeekHeader(monday) {
+      const sun = addDays(monday, 6);
+      const s = `${monday.getFullYear()}/${String(monday.getMonth()+1).padStart(2,'0')}/${String(monday.getDate()).padStart(2,'0')}`;
+      const e = `${sun.getFullYear()}/${String(sun.getMonth()+1).padStart(2,'0')}/${String(sun.getDate()).padStart(2,'0')}`;
       
-      // 🔥 已移除 (改由 loadEmployeeList 處理)
-      // const nameOptions = document.getElementById('nameOptions');
-      // nameOptions.innerHTML = Array.from(allNames).sort().map(n=>`<option value="${n}">`).join('');
-    }
-    
-    const GANTT_START = "09:00";
-    const GANTT_END   = "23:00";
-    function toMin(t){ const [H,M]=t.split(':').map(Number); return H*60+M; }
-    const MIN0 = toMin(GANTT_START), MIN1 = toMin(GANTT_END), RANGE = MIN1 - MIN0;
+      const el1 = document.getElementById('weekRangeText');
+      if (el1) el1.textContent = `${s} - ${e}`;
 
-    function rangeToPos(range){
-      const [a,b] = (range || '00:00-00:00').split('-');
-      const s = Math.max(MIN0, toMin(a));
-      const e = Math.min(MIN1, toMin(b));
-      if(e<=s) return null;
-      return { left: ((s - MIN0) / RANGE) * 100, width: ((e - s) / RANGE) * 100, label: `${a}-${b}` };
-    }
-    function collectDailyAvailability(ds){
-      const am = availabilityDetail[`${ds}::上午`] || [];
-      const pm = availabilityDetail[`${ds}::晚上`] || [];
-      const all = [...am, ...pm];
-      const map = new Map();
-      all.forEach(({name, time})=>{
-        if(!time) return;
-        if(!map.has(name)) map.set(name, []);
-        map.get(name).push(time);
-      });
-      return map; 
-    }
-    function guessPeriodByRange(range){
-      const h = parseInt(range.slice(0,2), 10);
-      return (h < 16) ? '上午' : '晚上';
+      const el2 = document.getElementById('weekRangeTextTop');
+      if (el2) el2.textContent = `${s} - ${e}`;
     }
 
-    function renderDayButtons(monday){
-      const wrap = document.getElementById('dayBtnGroup');
-      wrap.innerHTML = '';
-      const labels = ['一','二','三','四','五','六','日'];
-      daysOfWeek(monday).forEach((d,i)=>{
-        const ds = fmt(d);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn btn-outline-secondary btn-day';
-        btn.dataset.ds = ds;
-        btn.innerHTML = `<div class="fw-semibold">星期${labels[i]}</div><div class="small">${d.getMonth()+1}/${d.getDate()}</div>`;
-        btn.addEventListener('click', ()=> {
-          wrap.querySelectorAll('button').forEach(b=> b.classList.remove('active','btn-secondary'));
-          btn.classList.add('active','btn-secondary');
-          renderGanttForDay(ds);
-        });
-        wrap.appendChild(btn);
-      });
-      const firstBtn = wrap.querySelector('button');
-      if(firstBtn){ firstBtn.classList.add('active','btn-secondary'); renderGanttForDay(firstBtn.dataset.ds); }
-    }
-    function renderGanttHeader(container){
-      const header = document.createElement('div');
-      header.className = 'gantt-header';
-      header.innerHTML = `
-        <div class="name px-3 py-2 fw-semibold">可排人員</div>
-        <div class="times">
-          <div class="scale">
-            ${Array.from({length:15}, (_,i)=> {
-              const hour = 9 + i;
-              return `<div>${String(hour).padStart(2,'0')}:00</div>`;
-            }).join('')}
-          </div>
-        </div>`;
-      container.appendChild(header);
-    }
+    // ✅ 下載當前週班表圖片
+    async function downloadSchedulePng(){
+      const el = document.getElementById('scheduleViewCard');
+      if (!el) return;
 
-    function scrollToEditorCell(ds, period){
-      const td = document.querySelector(`#editorBody td[data-ds="${ds}"][data-period="${period}"]`);
-      if(!td) return;
-      td.scrollIntoView({ behavior:'smooth', block:'center' });
-      td.classList.add('pulse-highlight');
-      setTimeout(()=> td.classList.remove('pulse-highlight'), 1400);
-    }
-
-    function renderGanttForDay(ds){
-      const container = document.getElementById('ganttContainer');
-      container.innerHTML = '';
-      renderGanttHeader(container);
-      const daily = collectDailyAvailability(ds);
-      if(daily.size === 0){
-        container.innerHTML += '<div class="p-4 text-muted">此日目前沒有想排的時段資料。</div>';
+      if (typeof html2canvas === 'undefined') {
+        alert('html2canvas 未載入,無法下載圖片');
         return;
       }
-      for(const [name, ranges] of daily){
-        const row = document.createElement('div');
-        row.className = 'gantt-row';
-        row.innerHTML = `
-          <div class="name">${name}</div>
-          <div class="track">
-            <div class="gantt-grid">
-              ${Array.from({length:15}, ()=> '<div></div>').join('')}
-            </div>
-          </div>`;
-        const track = row.querySelector('.track');
-        (ranges || []).forEach(r=>{
-          const pos = rangeToPos(r);
-          if(!pos) return;
-          const bar = document.createElement('div');
-          bar.className = 'gantt-bar';
-          bar.style.left  = pos.left + '%';
-          bar.style.width = pos.width + '%';
-          bar.textContent = pos.label;
-          bar.title = `${name}｜${pos.label}（點一下加入下方編輯）`;
-          bar.addEventListener('click', ()=>{
-            const period = guessPeriodByRange(r); 
-            addToDraft(ds, period, name, r);
-            scrollToEditorCell(ds, period);
-          });
-          track.appendChild(bar);
+
+      try {
+        const canvas = await html2canvas(el, {
+          scale: 2,
+          backgroundColor: '#ffffff'
         });
-        container.appendChild(row);
+        const url = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `班表_${document.getElementById('weekRangeText').textContent}.png`;
+        a.click();
+      } catch (err) {
+        console.error('下載圖片失敗:', err);
+        alert('下載圖片失敗: ' + err.message);
       }
     }
 
-    /* ========= 編輯班表（草稿） ========= */
-    function renderEditorHeader(monday){
-      const headRow = document.getElementById('editorHeaderRow');
+        // ===== API 請求 =====
+    async function fetchJSON(url, options = {}) {
+      try {
+        const finalOptions = {
+          credentials: 'include',
+          ...options,
+        };
+
+        // 確保有送 JSON 的 header
+        finalOptions.headers = {
+          'Content-Type': 'application/json',
+          ...(options.headers || {})
+        };
+
+        console.log('➡️ fetchJSON 呼叫:', url, finalOptions);
+
+        const res = await fetch(url, finalOptions);
+        
+        const text = await res.text();
+        if (!res.ok) {
+          console.error('API 錯誤:', res.status, text);
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        // 後端回來本來就是 JSON
+        return text ? JSON.parse(text) : null;
+      } catch (err) {
+        console.error('[API ERROR]', url, err);
+        alert('API 錯誤: ' + err.message);
+        return null;
+      }
+    }
+
+
+    // ===== 載入全體員工清單 =====
+    async function loadEmployeeList() {
+      try {
+        const res = await fetch('班表管理API.php?action=employees', {
+          credentials: 'include'
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.employees) {
+            allEmployees = data.employees;
+            console.log('✅ 載入員工清單:', allEmployees.length, '人');
+            
+            const select = document.getElementById('assignNameSelect');
+            select.innerHTML = '<option value="">請選擇員工</option>' +
+              allEmployees.map(emp => 
+                `<option value="${emp.name}">${emp.name} (${emp.position || ''})</option>`
+              ).join('');
+          }
+        }
+      } catch (e) {
+        console.error('載入員工清單失敗:', e);
+      }
+    }
+
+    // ===== 載入員工可排時段 =====
+    async function loadAvailability(monday) {
+      const data = await fetchJSON(`班表.php?start=${fmt(monday)}`);
+      if (!data || !data.rows) {
+        console.warn('無可排時段資料');
+        availabilityDetail = {};
+        return;
+      }
+      
+      availabilityDetail = {};
+      data.rows.forEach(emp => {
+        const name = emp.name;
+        (emp.shifts || []).forEach((dayShifts, i) => {
+          const date = fmt(addDays(monday, i));
+          dayShifts.forEach(shift => {
+            const time = shift.split('~')[0] || '00:00';
+            const hour = parseInt(time.split(':')[0]);
+            const period = (hour >= 6 && hour < 14) ? '上午' : '晚上';
+            
+            const key = `${date}::${period}`;
+            if (!availabilityDetail[key]) {
+              availabilityDetail[key] = [];
+            }
+            
+            availabilityDetail[key].push({
+              name: name,
+              time: shift
+            });
+          });
+        });
+      });
+      
+      console.log('✅ 載入可排時段:', Object.keys(availabilityDetail).length, '個時段');
+    }
+
+// ===== 載入已確認班表（重點：解析所有人） =====
+async function loadSchedulePreview(monday) {
+  const url = `確認班表.php?date=${fmt(monday)}&t=${Date.now()}`;
+  const data = await fetchJSON(url);
+  
+  // 後端回傳的是：
+  // [
+  //   { timeSlot: '上午', days: ['小明 (10:00-18:00)<br>小美 (10:00-18:00)', ...] },
+  //   { timeSlot: '晚上', days: ['-', '-', ...] }
+  // ]
+  if (!Array.isArray(data)) {
+    console.warn('無已確認班表資料');
+    scheduleAssignedMap = {};
+    return;
+  }
+
+  scheduleAssignedMap = {};
+
+  // 以當週 7 天為基礎
+  daysOfWeek(monday).forEach((d, dayIndex) => {
+    const ds = fmt(d);
+    // 每一天固定先建好 上午 / 晚上 兩個欄位
+    scheduleAssignedMap[ds] = { '上午': [], '晚上': [] };
+
+    data.forEach(row => {
+      const slot = row.timeSlot;
+      if (slot !== '上午' && slot !== '晚上') return;
+
+      const dayContent = row.days[dayIndex];
+      if (!dayContent || dayContent === '-') return;
+
+      // 這裡把 <br> 拆開 => 每一段都是一個人
+      const parts = String(dayContent).split(/<br\s*\/?>/i);
+
+      parts.forEach(part => {
+        const text = part.trim();
+        if (!text) return;
+
+        // 解析「名字 (時間)」
+        const m = text.match(/(.+?)\s*\((.+?)\)/);
+        if (!m) return;
+
+        const name = m[1].trim();
+        const time = m[2].trim();
+
+        scheduleAssignedMap[ds][slot].push({
+          name,
+          time,
+          note: ''
+        });
+      });
+    });
+  });
+
+  console.log('✅ 載入已確認班表(含多位員工)', scheduleAssignedMap);
+}
+
+
+    // ===== 最上方「本週班表預覽」（左邊是員工姓名） =====
+    function renderPreviewHeader(monday) {
+      const headRow = document.getElementById('previewHeaderRow');
+      if (!headRow) return;
+
       headRow.querySelectorAll('th:nth-child(n+2)').forEach(th => th.remove());
-      const labels = ['一','二','三','四','五','六','日'];
-      daysOfWeek(monday).forEach((d,i)=>{
+
+      const labels = ['一', '二', '三', '四', '五', '六', '日'];
+      daysOfWeek(monday).forEach((d, i) => {
         const th = document.createElement('th');
-        th.innerHTML = `${d.getMonth()+1}/${d.getDate()}<br>星期${labels[i]}`;
+        th.innerHTML = `${d.getMonth() + 1}/${d.getDate()}<br>星期${labels[i]}`;
         headRow.appendChild(th);
       });
     }
-    function renderEditorGrid(monday){
+
+    function renderPreviewBody(monday) {
+      const tbody = document.getElementById('previewBody');
+      const hint  = document.getElementById('previewHint');
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+
+      // 🔹 用 Set 做「員工名單聯集」：API 回來的 + 已儲存班表裡出現過的
+      const nameSet = new Set();
+
+      // 1) 先加「員工清單 API」的名字
+      if (Array.isArray(allEmployees)) {
+        allEmployees.forEach(emp => {
+          if (emp && emp.name) {
+            nameSet.add(emp.name.trim());
+          }
+        });
+      }
+
+      // 2) 再把「已儲存班表」裡所有出現過的名字也加進來
+      Object.keys(scheduleAssignedMap || {}).forEach(ds => {
+        PERIODS.forEach(period => {
+          const list = (scheduleAssignedMap[ds]?.[period]) || [];
+          list.forEach(x => {
+            if (x && x.name) {
+              nameSet.add(x.name.trim());
+            }
+          });
+        });
+      });
+
+      const names = Array.from(nameSet).sort();
+
+      if (names.length === 0) {
+        if (hint) {
+          hint.textContent = '尚未有已儲存班表，請在下方「編輯班表」設定後按下「儲存班表」。';
+        }
+        return;
+      }
+
+      names.forEach(name => {
+        const tr = document.createElement('tr');
+
+        // 左邊：員工姓名
+        const th = document.createElement('th');
+        th.className = 'preview-name-cell';
+        th.textContent = name;
+        tr.appendChild(th);
+
+        // 右邊：一週 7 天
+        daysOfWeek(monday).forEach(d => {
+          const ds = fmt(d);
+          const td = document.createElement('td');
+          td.style.whiteSpace = 'nowrap';
+          td.style.verticalAlign = 'top';
+
+          const lines = [];
+
+          // 查這個員工在這一天上午/晚上有沒有被排到班
+          PERIODS.forEach(period => {
+            const list = (scheduleAssignedMap[ds]?.[period]) || [];
+            list
+              .filter(x => x.name === name)
+              .forEach(x => {
+                const label = x.time ? `${period} ${x.time}` : period;
+                lines.push(label);
+              });
+          });
+
+          if (lines.length > 0) {
+            td.innerHTML = lines
+              .map(label => `<span class="badge-shift">${label}</span>`)
+              .join('<br>');
+          } else {
+            td.innerHTML = '<span class="badge-off">休</span>';
+          }
+
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      if (hint) {
+        hint.textContent = '左側為員工姓名，右側為本週已儲存的班表，若需調整請在下方「編輯班表」修改後再儲存。';
+      }
+    }
+
+    function renderPreview(monday) {
+      renderWeekHeader(monday);
+      renderPreviewHeader(monday);
+      renderPreviewBody(monday);
+    }
+
+        // ===== 甘特圖時間軸設定 =====
+    const GANTT_START_HOUR = 6;   // 從 6:00 開始
+    const GANTT_END_HOUR   = 23;  // 到 23:00 結束
+
+    // ===== Gantt 圖 (日檢視) =====
+    let currentGanttDate = null;
+
+    function renderDayButtons(monday) {
+      const container = document.getElementById('ganttDayButtons');
+      container.innerHTML = '';
+      
+      const labels = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
+      daysOfWeek(monday).forEach((d, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm btn-outline-primary btn-day';
+        btn.textContent = `${labels[i]} ${d.getMonth() + 1}/${d.getDate()}`;
+        btn.dataset.date = fmt(d);
+        
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.btn-day').forEach(b => 
+            b.classList.remove('active', 'btn-primary')
+          );
+          btn.classList.add('active', 'btn-primary');
+          btn.classList.remove('btn-outline-primary');
+          
+          currentGanttDate = fmt(d);
+          renderGanttChart(currentGanttDate);
+        });
+        
+        container.appendChild(btn);
+        
+        if (i === 0) {
+          currentGanttDate = fmt(d);
+          btn.click();
+        }
+      });
+    }
+
+    function renderGanttChart(dateStr) {
+      console.log('🎨 渲染甘特圖:', dateStr);
+      
+      const container = document.getElementById('ganttChart');
+      
+      const morningKey = `${dateStr}::上午`;
+      const eveningKey = `${dateStr}::晚上`;
+      
+      
+      console.log('🔍 查找資料:', { morningKey, eveningKey });
+      console.log('📦 可用資料:', Object.keys(availabilityDetail));
+      
+      const morningList = availabilityDetail[morningKey] || [];
+      const eveningList = availabilityDetail[eveningKey] || [];
+      
+      console.log('📊 上午人員:', morningList.length, '人');
+      console.log('📊 晚上人員:', eveningList.length, '人');
+      
+      const allNames = new Set();
+      [...morningList, ...eveningList].forEach(x => allNames.add(x.name));
+      
+      if (allNames.size === 0) {
+        container.innerHTML = '<div class="text-center text-muted p-4">此日沒有可排人員</div>';
+        return;
+      }
+      
+            const totalHours = GANTT_END_HOUR - GANTT_START_HOUR; // 23 - 6 = 17 小時
+
+      let html = `
+        <div class="gantt-header">
+          <div class="name">員工</div>
+          <div class="times">
+            <div class="scale">
+              ${Array.from({ length: totalHours }, (_, i) => {
+                const hour = GANTT_START_HOUR + i; // 6,7,...,22
+                return `<div>${hour}:00</div>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      
+      Array.from(allNames).sort().forEach(name => {
+        const morning = morningList.find(x => x.name === name);
+        const evening = eveningList.find(x => x.name === name);
+        
+        html += `
+          <div class="gantt-row">
+            <div class="name">${name}</div>
+            <div class="track">
+            <div class="gantt-grid">
+                ${Array.from({ length: totalHours }, () => '<div></div>').join('')}
+              </div>
+        `;
+        
+        if (morning) {
+          const time = morning.time.split('~');
+          if (time.length === 2) {
+            const start = parseFloat(time[0].replace(':', '.'));
+            const end = parseFloat(time[1].replace(':', '.'));
+            const left = ((start - GANTT_START_HOUR) / totalHours) * 100;
+            const width = ((end - start) / totalHours) * 100;
+
+            
+            html += `
+              <div class="gantt-bar" style="left:${left}%; width:${width}%"
+                   data-date="${dateStr}" 
+                   data-period="上午" 
+                   data-name="${name}"
+                   data-time="${time[0]}-${time[1]}"
+                   title="點擊添加 ${name} 到編輯區">
+                上午 ${time[0]}-${time[1]}
+              </div>
+            `;
+          }
+        }
+        
+        if (evening) {
+          const time = evening.time.split('~');
+          if (time.length === 2) {
+            const start = parseFloat(time[0].replace(':', '.'));
+            const end = parseFloat(time[1].replace(':', '.'));
+            const left = ((start - GANTT_START_HOUR) / totalHours) * 100;
+            const width = ((end - start) / totalHours) * 100;
+
+            
+            html += `
+              <div class="gantt-bar" style="left:${left}%; width:${width}%"
+                   data-date="${dateStr}" 
+                   data-period="晚上" 
+                   data-name="${name}"
+                   data-time="${time[0]}-${time[1]}"
+                   title="點擊添加 ${name} 到編輯區">
+                晚上 ${time[0]}-${time[1]}
+              </div>
+            `;
+          }
+        }
+        
+        html += `
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+      
+      container.querySelectorAll('.gantt-bar').forEach(bar => {
+        bar.addEventListener('click', () => {
+          const date = bar.dataset.date;
+          const period = bar.dataset.period;
+          const name = bar.dataset.name;
+          const time = bar.dataset.time || '';
+          
+          console.log('🖱️ 點擊甘特圖:', { date, period, name, time });
+          
+          if (inDraft(date, period, name)) {
+            console.log('⚠️ 已存在於編輯區');
+            
+            bar.style.opacity = '0.6';
+            const originalBg = bar.style.background;
+            bar.style.background = 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)';
+            
+            setTimeout(() => {
+              bar.style.opacity = '1';
+              bar.style.background = originalBg;
+            }, 800);
+            
+            const td = document.querySelector(
+              `#editorBody td[data-ds="${date}"][data-period="${period}"]`
+            );
+            
+            if (td) {
+              td.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              td.classList.add('pulse-highlight');
+              setTimeout(() => td.classList.remove('pulse-highlight'), 1500);
+            }
+            
+            return;
+          }
+          
+          console.log('✅ 添加到編輯區:', { date, period, name, time });
+          addToDraft(date, period, name, time, true);
+          
+          const originalBg = bar.style.background;
+          bar.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
+          bar.style.transform = 'scale(1.08)';
+          
+          const originalHtml = bar.innerHTML;
+          bar.innerHTML = `<i class="fas fa-check-circle me-1"></i>` + originalHtml;
+          
+          setTimeout(() => {
+            bar.style.background = originalBg;
+            bar.style.transform = 'scale(1)';
+            bar.innerHTML = originalHtml;
+          }, 1500);
+          
+          const td = document.querySelector(
+            `#editorBody td[data-ds="${date}"][data-period="${period}"]`
+          );
+          
+          if (td) {
+            td.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      });
+    }
+
+    // ===== 編輯班表 =====
+    function ensureDraftKey(ds) {
+      if (!draftAssignedMap[ds]) {
+        console.log('🔧 初始化日期:', ds);
+        draftAssignedMap[ds] = { '上午': [], '晚上': [] };
+      }
+    }
+
+    function inDraft(ds, period, name) {
+      return (draftAssignedMap[ds]?.[period] || []).some(x => x.name === name);
+    }
+
+    function addToDraft(ds, period, name, time, showHighlight = false) {
+      console.log('📝 addToDraft 被調用:', { ds, period, name, time, showHighlight });
+      
+      ensureDraftKey(ds);
+      
+      console.log('📦 當前 draftAssignedMap[ds]:', draftAssignedMap[ds]);
+      
+      if (!inDraft(ds, period, name)) {
+        draftAssignedMap[ds][period].push({ name, time, note: '' });
+        console.log('✅ 成功添加到草稿:', { ds, period, name, time });
+        console.log('📊 更新後的列表:', draftAssignedMap[ds][period]);
+        
+        const td = document.querySelector(
+          `#editorBody td[data-ds="${ds}"][data-period="${period}"]`
+        );
+        
+        if (td) {
+          renderEditorCell(ds, period, showHighlight);
+        } else {
+          console.warn('⚠️ 表格尚未渲染該日期,稍後會自動顯示:', ds);
+        }
+      } else {
+        console.log('⚠️ 該員工已存在於草稿中');
+      }
+    }
+
+    function removeFromDraft(ds, period, name) {
+      if (draftAssignedMap[ds]?.[period]) {
+        draftAssignedMap[ds][period] = draftAssignedMap[ds][period].filter(
+          x => x.name !== name
+        );
+        renderEditorCell(ds, period);
+      }
+    }
+
+    function upsertDraft(ds, period, name, time, originalName = null) {
+      ensureDraftKey(ds);
+      
+      if (originalName && originalName !== name) {
+        removeFromDraft(ds, period, originalName);
+      }
+      
+      const list = draftAssignedMap[ds][period];
+      const existing = list.find(x => x.name === name);
+      
+      if (existing) {
+        existing.time = time;
+      } else {
+        list.push({ name, time, note: '' });
+      }
+      
+      renderEditorCell(ds, period);
+    }
+
+    function renderEditorHeader(monday) {
+      const headRow = document.getElementById('editorHeaderRow');
+      headRow.querySelectorAll('th:nth-child(n+2)').forEach(th => th.remove());
+      
+      const labels = ['一', '二', '三', '四', '五', '六', '日'];
+      daysOfWeek(monday).forEach((d, i) => {
+        const th = document.createElement('th');
+        th.innerHTML = `${d.getMonth() + 1}/${d.getDate()}<br>星期${labels[i]}`;
+        headRow.appendChild(th);
+      });
+    }
+
+    function renderEditorGrid(monday) {
       const tbody = document.getElementById('editorBody');
       tbody.innerHTML = '';
-      PERIODS.forEach(period=>{
+
+      const weekDates = daysOfWeek(monday).map(d => fmt(d));
+
+      PERIODS.forEach(period => {
         const tr = document.createElement('tr');
-        const th = document.createElement('th'); th.className='bg-light'; th.textContent = period; tr.appendChild(th);
-        daysOfWeek(monday).forEach(d=>{
-          const ds = fmt(d);
+        const th = document.createElement('th');
+        th.className = 'bg-light';
+        th.textContent = period;
+        tr.appendChild(th);
+
+        weekDates.forEach(ds => {
           ensureDraftKey(ds);
+
           const td = document.createElement('td');
-          td.dataset.ds = ds; td.dataset.period = period;
+          td.dataset.ds = ds;
+          td.dataset.period = period;
           td.innerHTML = `
             <div class="d-flex flex-wrap gap-2 mb-2"></div>
             <button type="button" class="btn btn-sm btn-outline-primary add-assign-btn">
               <i class="fas fa-plus me-1"></i>新增
-            </button>`;
+            </button>
+          `;
+
           tr.appendChild(td);
-          td.querySelector('.add-assign-btn').addEventListener('click', ()=> openAssignModal({ds, period}));
-          renderEditorCell(ds, period); 
+
+          td.querySelector('.add-assign-btn').addEventListener('click', () =>
+            openAssignModal({ ds, period })
+          );
         });
+
         tbody.appendChild(tr);
       });
+
+      // 🔹 等整個表格都畫完，再去把每個格子的員工 chip 渲染進去
+      weekDates.forEach(ds => {
+        PERIODS.forEach(period => {
+          renderEditorCell(ds, period);
+        });
+      });
     }
-    function renderEditorCell(ds, period){
-      const td = document.querySelector(`#editorBody td[data-ds="${ds}"][data-period="${period}"]`);
-      if(!td) return;
+
+    function renderEditorCell(ds, period, highlightNew = false) {
+      console.log('🎨 renderEditorCell:', { ds, period, highlightNew });
+      
+      const td = document.querySelector(
+        `#editorBody td[data-ds="${ds}"][data-period="${period}"]`
+      );
+      
+      if (!td) {
+        console.error('❌ 找不到對應的 td 元素:', { ds, period });
+        console.log('📋 當前週一:', fmt(currentMonday));
+        console.log('📅 嘗試渲染的日期:', ds);
+        
+        const monday = currentMonday;
+        const weekDates = daysOfWeek(monday).map(d => fmt(d));
+        console.log('📆 當前週的日期範圍:', weekDates);
+        
+        if (!weekDates.includes(ds)) {
+          console.warn('⚠️ 該日期不在當前週範圍內,無法渲染');
+        }
+        
+        return;
+      }
+      
+      console.log('✅ 找到 td 元素');
+      
       const wrap = td.querySelector('div');
       wrap.innerHTML = '';
-      (draftAssignedMap[ds]?.[period] || []).forEach(({name, time})=>{
+      
+      const list = draftAssignedMap[ds]?.[period] || [];
+      console.log('📝 要渲染的員工列表:', list);
+      
+      list.forEach(({ name, time }, index) => {
         const chip = document.createElement('span');
         chip.className = 'badge text-bg-primary assign-chip d-inline-flex align-items-center';
         chip.innerHTML = `
           <i class="fas fa-user me-1"></i>${name}
           <small class="opacity-75 ms-1">${time || ''}</small>
-          <button type="button" class="btn btn-light btn-sm chip-btn ms-2" title="修改"><i class="fas fa-pen"></i></button>
-          <button type="button" class="btn btn-light btn-sm chip-btn" title="移除">×</button>`;
+          <button type="button" class="btn btn-light btn-sm chip-btn ms-2" title="修改">
+            <i class="fas fa-pen"></i>
+          </button>
+          <button type="button" class="btn btn-light btn-sm chip-btn" title="移除">×</button>
+        `;
+        
         const [btnEdit, btnDel] = chip.querySelectorAll('button');
-        btnEdit.addEventListener('click', ()=> openAssignModal({ds, period, name, time}));
-        btnDel .addEventListener('click', ()=> removeFromDraft(ds, period, name));
+        btnEdit.addEventListener('click', () => 
+          openAssignModal({ ds, period, name, time })
+        );
+        btnDel.addEventListener('click', () => 
+          removeFromDraft(ds, period, name)
+        );
+        
         wrap.appendChild(chip);
+        
+        if (highlightNew && index === list.length - 1) {
+          console.log('✨ 添加高亮動畫');
+          chip.classList.add('chip-highlight');
+          setTimeout(() => {
+            chip.classList.remove('chip-highlight');
+          }, 1500);
+        }
       });
+      
+      if (highlightNew) {
+        console.log('✨ 單元格閃爍動畫');
+        td.classList.add('cell-flash');
+        setTimeout(() => {
+          td.classList.remove('cell-flash');
+        }, 1500);
+      }
+      
+      console.log('✅ renderEditorCell 完成');
     }
 
+    // ===== Modal =====
     const assignModal = new bootstrap.Modal(document.getElementById('assignModal'));
-    const assignForm  = document.getElementById('assignForm');
-    const assignNameSelect = document.getElementById('assignNameSelect'); // 🔥【問題一修正】抓 select
+    const assignForm = document.getElementById('assignForm');
+    const assignNameSelect = document.getElementById('assignNameSelect');
 
-    function openAssignModal({ds, period, name='', time=''}) {
+    function openAssignModal({ ds, period, name = '', time = '' }) {
       document.getElementById('assignDs').value = ds;
       document.getElementById('assignPeriod').value = period;
       document.getElementById('assignOriginalName').value = name || '';
-      document.getElementById('assignModalTitle').textContent = name ? '修改人員' : '新增人員';
-      
-      // 🔥【問題一修正】動態填入 <select>
-      assignNameSelect.innerHTML = '<option value="">請選擇員工...</option>';
-      employeeList.forEach(emp => {
-          // value 存 "姓名"，因為你後端的 API (確認班表.php) 是用 "姓名" 去比對的
-          assignNameSelect.insertAdjacentHTML('beforeend', 
-              `<option value="${emp.name}">${emp.name}</option>`
-          );
-      });
-      
-      // 試圖選中
+      document.getElementById('assignModalTitle').textContent = 
+        name ? '修改人員' : '新增人員';
+
       assignNameSelect.value = name || '';
 
       let start = '', end = '';
-      if (time && time.includes('-')) { [start, end] = time.split('-'); }
+      if (time && time.includes('-')) {
+        [start, end] = time.split('-');
+      }
       document.getElementById('assignStart').value = start || '';
-      document.getElementById('assignEnd').value   = end || '';
+      document.getElementById('assignEnd').value = end || '';
+
       assignModal.show();
     }
-    
-    assignForm.addEventListener('submit', (e)=>{
+
+    assignForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const ds     = document.getElementById('assignDs').value;
+      
+      const ds = document.getElementById('assignDs').value;
       const period = document.getElementById('assignPeriod').value;
       const originalName = document.getElementById('assignOriginalName').value || null;
-      
-      // 🔥【問題一修正】從 <select> 讀取姓名
-      const name   = assignNameSelect.value;
-      
-      const start  = document.getElementById('assignStart').value;
-      const end    = document.getElementById('assignEnd').value;
-      if(!name || !start || !end){ 
-          if(!name) alert('請選擇姓名');
-          return; 
+      const name = assignNameSelect.value;
+      const start = document.getElementById('assignStart').value;
+      const end = document.getElementById('assignEnd').value;
+
+      if (!name || !start || !end) {
+        if (!name) alert('請選擇姓名');
+        return;
       }
+      
       const time = `${start}-${end}`;
       upsertDraft(ds, period, name, time, originalName);
       assignModal.hide();
     });
 
-   /* ========= 儲存至確認班表 ========= */
+    // ===== 儲存班表 =====
+        // ===== 儲存班表 =====
     async function saveDraft(monday) {
-      const payload = { week_start: fmt(monday), assignments: {} };
-      daysOfWeek(monday).forEach(d => {
+      // 🔍 先把草稿資料整理成後端要的格式
+      const payload = {
+        week_start: fmt(monday),
+        assignments: {}
+      };
+
+      const weekDays = daysOfWeek(monday);
+
+      weekDays.forEach(d => {
         const ds = fmt(d);
         payload.assignments[ds] = {};
+
         PERIODS.forEach(period => {
-          payload.assignments[ds][period] = (draftAssignedMap[ds]?.[period] || []).map(x => {
-            return { name: x.name, time: x.time, note: x.note || '' };
-          });
+          const list = (draftAssignedMap[ds]?.[period] || []);
+          payload.assignments[ds][period] = list.map(x => ({
+            name: x.name,
+            time: x.time,
+            note: x.note || ''
+          }));
         });
       });
+
+      // 🔁 除錯用：看一下準備送出去的資料長怎樣
+      console.log('📝 儲存班表 payload =', JSON.stringify(payload, null, 2));
 
       try {
         const result = await fetchJSON('確認班表.php', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
+
+        console.log('✅ 儲存班表回傳:', result);
+
         if (result && result.success) {
-          // 🔥【問題二修正】
-          // 呼叫 loadSchedulePreview，因為它現在有 cache-buster，會抓到最新資料
+          // 重新載入預覽
           await loadSchedulePreview(currentMonday);
-          alert('班表已確認並儲存！');
+          renderPreview(currentMonday);
+          alert(result.message || '班表已確認並儲存!');
         } else {
-          alert('儲存失敗: ' + (result.message || '未知錯誤'));
+          alert('儲存失敗: ' + (result?.error || '未知錯誤'));
         }
       } catch (err) {
         console.error('儲存班表錯誤', err);
-        alert('儲存班表失敗，請稍後再試');
+        alert('儲存班表失敗,請稍後再試');
       }
     }
 
-    /* ========= 刷新流程 ========= */
-    
-    // 🔥【已修改】預設日期為 7 天後 (下週)
+
+    // ===== 刷新流程 =====
     const defaultDateForLoad = new Date();
+    // 🔹 一進來就是「下週」的班表（你之前要的行為）
     defaultDateForLoad.setDate(defaultDateForLoad.getDate() + 7);
     
     let currentMonday = getMonday(defaultDateForLoad);
 
-    async function refreshAll(){
+    async function refreshAll() {
+      console.log('🔄 開始刷新所有數據...');
+      
       renderWeekHeader(currentMonday);
       renderEditorHeader(currentMonday);
+
+      // 先載入已儲存班表 → 給預覽 & 編輯區用
       await loadSchedulePreview(currentMonday);
-      // 🔥 用「已確認班表」的資料，初始化「編輯草稿區」
-      draftAssignedMap = JSON.parse(JSON.stringify(scheduleAssignedMap));
+
+      // 更新最上面的「本週班表預覽」
+      renderPreview(currentMonday);
+
+      // 編輯區一開始以「已儲存班表」為草稿
+      draftAssignedMap = JSON.parse(JSON.stringify(scheduleAssignedMap || {}));
+      renderEditorGrid(currentMonday);
+      
+      // 可排時段 + 日檢視甘特圖
       await loadAvailability(currentMonday);
       renderDayButtons(currentMonday);
+      
+      console.log('✅ 所有數據刷新完成');
+    }
+
+    // ===== 事件綁定 =====
+    document.getElementById('btnSaveDraft').addEventListener('click', () => 
+      saveDraft(currentMonday)
+    );
+
+    document.getElementById('btnClearDraft').addEventListener('click', () => {
+      if (!confirm('確定要清空本週的草稿嗎?')) return;
+      draftAssignedMap = {};
       renderEditorGrid(currentMonday);
+    });
+
+    document.getElementById('sidebarToggle')?.addEventListener('click', e => {
+      e.preventDefault();
+      document.body.classList.toggle('sb-sidenav-toggled');
+    });
+
+    const dateEl = document.getElementById('currentDate');
+    if (dateEl) {
+      dateEl.textContent = new Date().toLocaleDateString('zh-TW', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+      });
     }
 
-    /* ========= 綁定按鈕事件 ========= */
-    document.getElementById('btnQuery').addEventListener('click', async ()=>{
-      currentMonday = getMonday(selectedDate());
+    window.addEventListener('DOMContentLoaded', async () => {
+      // 先更新登入者資訊 & 頭像
+      await loadLoggedInUser();
+
+      // 再載員工清單 + 班表資料
+      await loadEmployeeList();
       await refreshAll();
-    });
-    document.getElementById('btnSaveDraft').addEventListener('click', ()=> saveDraft(currentMonday));
-    document.getElementById('btnClearDraft').addEventListener('click', ()=>{
-      if(!confirm('確定要清空本週的草稿嗎？(此動作不會儲存，需手動儲存)')) return;
-      draftAssignedMap = {}; 
-      renderEditorGrid(currentMonday); 
-    });
 
+      // ✅ 上週 / 本週 / 下週 的事件
+      document.getElementById('btnPrevWeek')?.addEventListener('click', async () => {
+        currentMonday = addDays(currentMonday, -7);
+        await refreshAll();
+      });
 
-    // ---- 修正：頁尾 JS (參照 員工資料表.php) ----
-    
-    // 注入 PHP 變數 (供 loadLoggedInUser 讀取頭像)
-    const API_BASE  = <?php echo json_encode($API_BASE_URL, JSON_UNESCAPED_SLASHES); ?>;
-    const DATA_BASE = <?php echo json_encode($DATA_BASE_URL, JSON_UNESCAPED_SLASHES); ?>;
+      document.getElementById('btnNextWeek')?.addEventListener('click', async () => {
+        currentMonday = getMonday(new Date());
+        await refreshAll();
+      });
 
-    const $  = s => document.querySelector(s);
-    const el = id => document.getElementById(id);
+      document.getElementById('btnNextNextWeek')?.addEventListener('click', async () => {
+        currentMonday = addDays(currentMonday, 7);
+        await refreshAll();
+      });
 
-    // 今日日期
-    const dateEl = el('currentDate');
-    if(dateEl) {
-        dateEl.textContent = new Date().toLocaleDateString('zh-TW', {year:'numeric',month:'long',day:'numeric',weekday:'long'});
-    }
-
-    // 側欄開關 (已在頂部 navbar 綁定)
-    el('sidebarToggle')?.addEventListener('click', e => { 
-        e.preventDefault(); 
-        document.body.classList.toggle('sb-sidenav-toggled'); 
-    });
-
-    // 取得登入者資訊 (from 員工資料表.php)
-    async function loadLoggedInUser(){
-        const userName = <?php echo json_encode($userName, JSON_UNESCAPED_UNICODE); ?>;
-        const userId = <?php echo json_encode($userId, JSON_UNESCAPED_UNICODE); ?>;
-        console.log('✅ 班表管理 已登入:', userName, 'ID:', userId);
-        
-        // 載入真實頭像 (使用 API_BASE)
-        try {
-            const r = await fetch(API_BASE + '/me.php', {credentials:'include'});
-            if(r.ok) {
-            const data = await r.json();
-            if(data.avatar_url) {
-                const avatarUrl = data.avatar_url + (data.avatar_url.includes('?')?'&':'?') + 'v=' + Date.now();
-                const avatar = document.querySelector('.navbar .user-avatar');
-                if(avatar) {
-                    avatar.src = avatarUrl;
-                    console.log('✅ 頭像已更新:', avatarUrl);
-                }
-            }
-            }
-        } catch(e) {
-            console.warn('載入頭像失敗:', e);
-        }
-    }
-
-   // 頁面初始化
-    window.addEventListener('DOMContentLoaded', async ()=>{
-        // 1. 載入版型共用資訊 (頭像/名稱)
-        await loadLoggedInUser();
-        
-        // 🔥【問題一修正】先載入全體員工清單
-        await loadEmployeeList();
-        
-        // 2. 執行此頁面的核心邏輯 (班表)
-        initDateSelectors(); // 🔥 會預設選取下週
-        await refreshAll();  // 🔥 會預設載入下週
+      // ✅ 下載圖片按鈕
+      document.getElementById('btnDownloadPng')?.addEventListener('click', downloadSchedulePng);
     });
   </script>
 </body>

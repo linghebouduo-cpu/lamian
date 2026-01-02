@@ -53,17 +53,23 @@ async function loadEmployees() {
 // 渲染員工資料到表格
 function renderEmployees(list) {
     const html = list.map(emp => {
+        // ✅ 統一欄位名稱 (從 API 讀取)
         const id = emp.id ?? '';
         const name = emp.name ?? '';
-        const birth_date = emp.birth_date ?? emp.birthDate ?? '';
-        const telephone = emp.telephone ?? emp.Telephone ?? '';
+        const birth_date = emp.birth_date ?? '';
+        const telephone = emp.telephone ?? '';
         const email = emp.email ?? '';
         const address = emp.address ?? '';
-        const id_card = emp.id_card ?? emp.ID_card ?? '';
+        const id_card = emp.id_card ?? '';
+        
+        // 🔥 修正：API 回傳的是 role (A/B/C) 和 position (職位)
         const role = emp.role ?? ''; // 這裡會顯示 A, B, C
-        const position = emp.position ?? emp.Position ?? '';
-        const base_salary = emp.base_salary ?? emp.baseSalary ?? 'N/A';
-        const hourly_rate = emp.hourly_rate ?? emp.hourlyRate ?? 'N/A';
+        const position = emp.position ?? '';
+        
+        // 判斷薪資類型
+        const employmentType = (emp.base_salary && emp.base_salary > 0) ? '正職' : '臨時員工';
+        const base_salary = (employmentType === '正職') ? (emp.base_salary ?? 'N/A') : 'N/A';
+        const hourly_rate = (employmentType === '臨時員工') ? (emp.hourly_rate ?? 'N/A') : 'N/A';
 
         return `<tr>
             <td>${id}</td>
@@ -73,8 +79,10 @@ function renderEmployees(list) {
             <td>${email}</td>
             <td>${address}</td>
             <td>${id_card}</td>
-            <td>${role}</td>
+            
+            <td>${role}</td> 
             <td>${position}</td>
+
             <td>${base_salary}</td>
             <td>${hourly_rate}</td>
             <td>
@@ -92,7 +100,9 @@ function renderEmployees(list) {
 function searchEmployees() {
     const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
     if (!query) {
-        loadEmployees();
+        // ✅ 修正：原本呼叫 loadEmployees() 會重新請求 API，
+        // 改成 renderEmployees(EMP_CACHE) 直接從快取還原
+        renderEmployees(EMP_CACHE); 
         return;
     }
     const filtered = EMP_CACHE.filter(emp =>
@@ -110,12 +120,12 @@ async function deleteEmployee(id) {
         const res = await fetch(API_URL, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id })
+            body: JSON.stringify({ id }) // API 會接收 { "id": "A100000" }
         });
         const apiResponse = await res.json();
         if (apiResponse.success) {
             alert('刪除成功！');
-            loadEmployees();
+            loadEmployees(); // 重新載入
         } else {
             alert('刪除失敗：' + apiResponse.message);
         }
@@ -434,8 +444,11 @@ async function submitAddEmployee() {
         console.log('API 回應:', result);
 
         if (result.success) {
-            const message = `員工新增成功！\n員工編號：${result.data.employee_id}\n登入帳號：${result.data.account}`;
-            alert(message);
+            const message = `員工新增成功！
+員工編號：${result.data.employee_id}
+登入帳號：${result.data.employee_id}
+預設密碼：${result.data.default_password}（身分證後4碼）`;
+alert(message);
             
             // 關閉Modal
             const addModal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
@@ -598,8 +611,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ==================== 編輯功能 ====================
-// (注意：編輯功能尚未修改)
+
+// ==================== 🔥🔥 編輯功能 (已修正) 🔥🔥 ====================
 
 // 開啟編輯員工Modal
 function editEmployee(id) {
@@ -617,7 +630,6 @@ function editEmployee(id) {
     // 處理生日格式 - 確保是 YYYY-MM-DD 格式
     let birthDateValue = empToEdit.birth_date || empToEdit.birthDate || '';
     if (birthDateValue) {
-        // 如果是其他格式，轉換為 YYYY-MM-DD
         const dateObj = new Date(birthDateValue);
         if (!isNaN(dateObj.getTime())) {
             const year = dateObj.getFullYear();
@@ -628,9 +640,8 @@ function editEmployee(id) {
     }
     document.getElementById('editBirthDate').value = birthDateValue;
     
-    // 🔥 注意：這裡的 'role' 是 A/B/C，但編輯表單的 'editRole' 仍是 "正職/臨時工"
-    // 這會導致錯誤，編輯功能需要一併修改
-    // document.getElementById('editRole').value = empToEdit.role; // 暫時註解
+    // 🔥🔥【修正】: 填入「權限等級」 (A/B/C)
+    document.getElementById('editPermissionLevel').value = empToEdit.role;
     
     // 統一使用正確的欄位名稱
     document.getElementById('editPosition').value = empToEdit.Position || empToEdit.position || '';
@@ -639,8 +650,8 @@ function editEmployee(id) {
     document.getElementById('editAddress').value = empToEdit.address;
     document.getElementById('editIdCard').value = empToEdit.ID_card || empToEdit.id_card || '';
 
-    // 3. 根據雇用類別顯示或隱藏底薪或時薪欄位 (🔥 這裡也需要修改)
-    // 暫時判斷：如果 base_salary > 0 視為正職
+    // 3. 根據雇用類別顯示或隱藏底薪或時薪欄位
+    // (判斷：如果 base_salary > 0 視為正職)
     if (empToEdit.base_salary > 0) {
         document.getElementById('editRole').value = '正職';
         document.getElementById('editBaseSalary').value = empToEdit.base_salary || '';
@@ -653,30 +664,42 @@ function editEmployee(id) {
         document.getElementById('editHourlyRateGroup').style.display = 'block';
     }
 
+    
+
     // 4. 顯示彈出視窗
     const editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
     editModal.show();
 }
 
-// 提交編輯表單 (🔥 尚未修改)
+
+
+// 提交編輯表單
 async function submitEdit() {
     // 收集表單資料
     const id = document.getElementById('editId').value;
     const name = document.getElementById('editName').value.trim();
     const birth_date = document.getElementById('editBirthDate').value;
     
-    // 🔥 警告： 'editRole' 拿到的是 "正職/臨時工"，但 API 需要 A/B/C
-    // 您需要一個 "編輯" 用的 A/B/C 下拉選單
-    const role = document.getElementById('editRole').value; // 這裡的值是錯的
+    // 🔥🔥【修正】: 從 'editPermissionLevel' 讀取 A/B/C
+    const role = document.getElementById('editPermissionLevel').value;
     
     const position = document.getElementById('editPosition').value.trim();
     const telephone = document.getElementById('editTelephone').value.trim();
     const email = document.getElementById('editEmail').value.trim();
     const address = document.getElementById('editAddress').value.trim();
     const id_card = document.getElementById('editIdCard').value.trim();
+    
+    // 🔥🔥【修正】: 讀取 'editRole' (正職/臨時) 僅用於判斷薪資
+    const employmentType = document.getElementById('editRole').value;
 
-    // 驗證必填欄位
+    // 驗證必填欄位 (🔥 修正：加入 editPermissionLevel 驗證)
     if (!id || !name || !birth_date || !role || !position || !telephone || !address || !id_card) {
+        // 🔥🔥【修正】: 這裡的錯誤就是你看到的 "缺少員工 ID"
+        // 雖然我們的主 bug 是 parseInt，但這個檢查也要確保 ID 真的有值
+        if (!id) {
+             alert('更新失敗：缺少員工 ID');
+             return;
+        }
         alert('請填寫所有必填欄位！');
         return;
     }
@@ -691,20 +714,21 @@ async function submitEdit() {
     let base_salary = null;
     let hourly_rate = null;
     
-    if (role === '正職') {
+    if (employmentType === '正職') {
         const salaryValue = document.getElementById('editBaseSalary').value.trim();
         base_salary = salaryValue ? parseInt(salaryValue) : null;
-    } else if (role === '臨時員工') {
+    } else if (employmentType === '臨時員工') {
         const rateValue = document.getElementById('editHourlyRate').value.trim();
         hourly_rate = rateValue ? parseInt(rateValue) : null;
     }
 
     // 組織要提交的資料
     const data = {
-        id: parseInt(id),
+        // 🔥🔥【修正】: ID 直接傳送字串，不要 parseInt
+        id: id,
         name: name,
         birth_date: birth_date,
-        role: role, // 🔥 這裡送出的是 "正職"，API 會報錯
+        role: role, // 🔥 這裡現在送出的是 A/B/C
         Position: position,
         Telephone: telephone,
         email: email,
@@ -712,7 +736,7 @@ async function submitEdit() {
         ID_card: id_card,
         base_salary: base_salary,
         hourly_rate: hourly_rate,
-        password_hash: ''
+        password_hash: '' // 假設 API 會忽略這個欄位
     };
 
     try {
@@ -730,6 +754,7 @@ async function submitEdit() {
             editModal.hide();
             loadEmployees();
         } else {
+            // 這裡會顯示來自 API 的錯誤，例如 "缺少員工 ID"
             alert('更新失敗：' + apiResponse.message);
         }
     } catch (e) {
@@ -789,9 +814,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==================== 初始化載入 ====================
 document.addEventListener('DOMContentLoaded', function () {
-    // 🔥 注意：loadEmployees() 會在 員工資料表.php 的頁尾 JS 中被觸發
-    // 這裡的 loadEmployees() 會在 員工資料表.js 載入時觸發
-    // 雖然不影響功能，但您在 員工資料表.php 頁尾的 loadLoggedInUser() 才是正確的
-    // (您的 員工資料表.js 檔案中，這一行是重複的)
-    // loadEmployees();
+    // 您的 員工資料表.php 檔案中，頁尾的 <script> 區塊
+    // 已經有 DOMContentLoaded 事件了，並會在 loadLoggedInUser 之後
+    // 呼叫 loadEmployees()。
+    // 所以這裡不需要再呼叫一次。
+});
+// ==================== 🔥 重製 Token 功能 ====================
+document.addEventListener('DOMContentLoaded', function () {
+    const resetTokenBtn = document.getElementById('resetTokenBtn');
+    if (resetTokenBtn) {
+        resetTokenBtn.addEventListener('click', async function () {
+            if (!confirm('確定要重製該員工的 device_token 嗎？')) return;
+
+            try {
+                // 這裡假設重製的是選定員工的 ID，可從 editId 或其他方式取得
+                const employeeId = document.getElementById('editId')?.value;
+                if (!employeeId) {
+                    alert('請先選擇要重製 Token 的員工');
+                    return;
+                }
+
+                const res = await fetch('/lamian-ukn/token.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: employeeId })
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    alert('Token 重製成功！\n新的 token: ' + result.token);
+                    // 更新快取，如果你想直接顯示在表格裡可以在此處更新 EMP_CACHE
+                    loadEmployees();
+                } else {
+                    alert('重製失敗：' + result.message);
+                }
+            } catch (e) {
+                console.error('重製 Token 失敗：', e);
+                alert('重製 Token 失敗，請檢查網路或伺服器設定');
+            }
+        });
+    }
 });

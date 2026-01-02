@@ -32,34 +32,342 @@ $API_BASE_URL  = '/lamian-ukn/api';
   <link href="css/styles.css" rel="stylesheet" />
   <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
 
-  <style>
-    /* 🔥 保留：維持您原有的橘色主題 CSS */
-    :root{
-      --primary-gradient: linear-gradient(135deg, #fbb97ce4 0%, #ff0000cb 100%);
-      --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      --success-gradient: linear-gradient(135deg, #4facfe 0%, #54bcc1 100%);
-      --warning-gradient: linear-gradient(135deg, #fbb97ce4 0%, #ff00006a 100%);
-      --dark-bg: linear-gradient(135deg, #fbb97ce4 0%, #ff00006a 100%);
-      --card-shadow: 0 15px 35px rgba(0,0,0,.1);
-      --border-radius: 20px;
-      --transition: all .3s cubic-bezier(.4,0,.2,1);
+   <style>
+    /* ====== 整體風格：跟 日報表記錄 / 薪資管理 / 庫存查詢 / 庫存調整 統一 ====== */
+    :root {
+      --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 30%, #f5e9ff 100%);
+      --text-main: #0f172a;
+      --text-subtle: #64748b;
+
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --card-radius: 22px;
+
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+      --shadow-hover: 0 22px 60px rgba(15, 23, 42, 0.18);
+
+      --transition-main: all .25s cubic-bezier(.4, 0, .2, 1);
     }
-    *{ transition: var(--transition); }
-    body{ background:#fff; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; min-height:100vh; }
-    .sb-topnav{ background: var(--dark-bg) !important; border:none; box-shadow:var(--card-shadow); backdrop-filter: blur(10px); }
-    .navbar-brand{ font-weight:700; font-size:1.5rem; background: linear-gradient(45deg,#ffffff,#ffffff);
-      -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; }
 
-    .sb-sidenav{ background: linear-gradient(180deg,#fbb97ce4 0%, #ff00006a 100%) !important; box-shadow: var(--card-shadow); backdrop-filter: blur(10px); }
-    .sb-sidenav-menu-heading{ color: rgba(255,255,255,.7) !important; font-weight:600; font-size:.85rem; text-transform:uppercase; letter-spacing:1px; padding:20px 15px 10px 15px !important; margin-top:15px; }
-    .sb-sidenav .nav-link{ border-radius:15px; margin:5px 15px; padding:12px 15px; position:relative; overflow:hidden; color:rgba(255,255,255,.9)!important; font-weight:500; backdrop-filter: blur(10px); }
-    .sb-sidenav .nav-link:hover{ background:rgba(255,255,255,.15)!important; transform:translateX(8px); box-shadow:0 8px 25px rgba(0,0,0,.2); color:#fff!important; }
-    .sb-sidenav .nav-link.active{ background:rgba(255,255,255,.2)!important; color:#fff!important; font-weight:600; box-shadow:0 8px 25px rgba(0,0,0,.15); }
-    .sb-sidenav .nav-link::before{ content:''; position:absolute; left:0; top:0; height:100%; width:4px; background: linear-gradient(45deg,#ffffff,#ffffff); transform:scaleY(0); border-radius:0 10px 10px 0; }
-    .sb-sidenav .nav-link:hover::before, .sb-sidenav .nav-link.active::before{ transform: scaleY(1); }
-    .sb-sidenav .nav-link i{ width:20px; text-align:center; margin-right:10px; font-size:1rem; }
-    .sb-sidenav-footer{ background: rgba(255,255,255,.1) !important; color:#fff !important; border-top:1px solid rgba(255,255,255,.2); padding:20px 15px; margin-top:20px; }
+    * {
+      transition: var(--transition-main);
+    }
 
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.24), transparent 55%),
+        radial-gradient(circle at 100% 0%, rgba(222, 114, 244, 0.24), transparent 55%),
+        var(--bg-gradient);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+    }
+
+    /* ====== Top navbar：藍色漸層 ====== */
+    .sb-topnav {
+      background: linear-gradient(120deg, #1e3a8a, #3658ff) !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.42);
+      backdrop-filter: blur(18px);
+    }
+
+    .navbar-brand {
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #f9fafb !important;
+    }
+
+    .navbar-nav .nav-link {
+      color: #e5e7eb !important;
+    }
+
+    .navbar-nav .nav-link:hover {
+      color: #ffffff !important;
+    }
+
+    .container-fluid {
+      padding: 26px 28px !important;
+    }
+
+    /* ====== Sidebar：藍紫玻璃感 ====== */
+    .sb-sidenav {
+      background:
+        radial-gradient(circle at 40% 0%, rgba(56, 189, 248, 0.38), transparent 65%),
+        radial-gradient(circle at 80% 100%, rgba(147, 197, 253, 0.34), transparent 70%),
+        linear-gradient(180deg, rgba(220, 235, 255, 0.92), rgba(185, 205, 255, 0.9));
+      backdrop-filter: blur(22px);
+      border-right: 1px solid rgba(255, 255, 255, 0.55);
+    }
+
+    .sb-sidenav-menu-heading {
+      color: #1e293b !important;
+      opacity: 0.75;
+      font-size: 0.78rem;
+      letter-spacing: .18em;
+      margin: 20px 0 8px 16px;
+    }
+
+    .sb-sidenav .nav-link {
+      color: #0f172a !important;
+      font-weight: 600;
+      border-radius: 18px;
+      padding: 12px 18px;
+      margin: 8px 12px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.80),
+        rgba(241, 248, 255, 0.95)
+      );
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sb-sidenav .nav-link .sb-nav-link-icon {
+      margin-right: 10px;
+      color: #1e293b !important;
+      opacity: 0.9 !important;
+      font-size: 1.05rem;
+    }
+
+    .sb-sidenav .sb-sidenav-collapse-arrow i,
+    .sb-sidenav .nav-link i.fa-chevron-right {
+      color: #1e293b !important;
+      opacity: 0.85 !important;
+    }
+
+    .sb-sidenav .nav-link:hover {
+      border-color: rgba(255, 255, 255, 1);
+      box-shadow: 0 14px 30px rgba(59, 130, 246, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .sb-sidenav .nav-link:hover .sb-nav-link-icon,
+    .sb-sidenav .nav-link:hover .sb-sidenav-collapse-arrow i,
+    .sb-sidenav .nav-link:hover i.fa-chevron-right {
+      color: #0f172a !important;
+      opacity: 1 !important;
+    }
+
+    .sb-sidenav .nav-link.active {
+      background: linear-gradient(135deg, #4f8bff, #7b6dff);
+      border-color: rgba(255, 255, 255, 0.98);
+      color: #ffffff !important;
+      box-shadow: 0 18px 36px rgba(59, 130, 246, 0.6);
+    }
+
+    .sb-sidenav .nav-link.active .sb-nav-link-icon,
+    .sb-sidenav .nav-link.active .sb-sidenav-collapse-arrow i {
+      color: #e0f2fe !important;
+    }
+
+    .sb-sidenav-footer {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.9),
+        rgba(226, 232, 255, 0.95)
+      ) !important;
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(148, 163, 184, 0.5);
+      padding: 16px 20px;
+      color: #111827 !important;
+      box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.10);
+      font-size: 0.95rem;
+    }
+
+    .sb-sidenav-footer .small {
+      color: #6b7280 !important;
+    }
+
+    /* 修正側欄箭頭 / icon 顏色 */
+    .sb-sidenav .nav-link svg,
+    .sb-sidenav .nav-link svg path,
+    .sb-sidenav .nav-link i,
+    .sb-sidenav .nav-link::after {
+      stroke: #1e293b !important;
+      color: #1e293b !important;
+      fill: #1e293b !important;
+      opacity: 0.9 !important;
+    }
+    .sb-sidenav .nav-link:hover svg,
+    .sb-sidenav .nav-link:hover svg path,
+    .sb-sidenav .nav-link:hover i,
+    .sb-sidenav .nav-link:hover::after {
+      stroke: #0f172a !important;
+      color: #0f172a !important;
+      fill: #0f172a !important;
+      opacity: 1 !important;
+    }
+
+    /* ====== 標題 & 麵包屑 ====== */
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      background: linear-gradient(120deg, #0f172a, #2563eb);
+      -webkit-background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .breadcrumb {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+      backdrop-filter: blur(10px);
+    }
+
+    .breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+      color: #9ca3af;
+    }
+
+    /* ====== 卡片 / 表格 ====== */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(239, 246, 255, 0.96));
+      border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding-top: 14px;
+      padding-bottom: 10px;
+    }
+
+    .card-body {
+      padding: 18px 20px 20px;
+    }
+
+    .table {
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .table thead th {
+      background: linear-gradient(135deg, #4f8bff, #7b6dff);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+      padding: 12px 10px;
+    }
+
+    .table tbody td {
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+      padding: 12px 10px;
+      border-color: rgba(148, 163, 184, .25);
+    }
+
+    .table-hover tbody tr:hover {
+      background: rgba(59, 130, 246, 0.06);
+    }
+
+    footer {
+      background: transparent;
+      border-top: 1px solid rgba(148, 163, 184, 0.35);
+      margin-top: 24px;
+      padding-top: 14px;
+      font-size: 0.8rem;
+      color: var(--text-subtle);
+    }
+
+    @media (max-width: 992px) {
+      .container-fluid {
+        padding: 20px 16px !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container-fluid {
+        padding: 16px 12px !important;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+    }
+
+    /* ====== 按鈕造型：主按鈕 / 外框按鈕（分類操作 / 商品操作 / modal） ====== */
+    .btn-primary {
+      background: linear-gradient(135deg, #4f8bff 0%, #7b6dff 100%) !important;
+      color: #fff;
+      border-color: rgba(59, 130, 246, .25) !important;
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+    }
+    .btn-primary:hover,
+    .btn-primary:focus,
+    .btn-primary:active {
+      filter: brightness(1.03);
+      box-shadow: 0 8px 18px rgba(59, 130, 246, 0.5);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+
+    .btn-outline-secondary,
+    .btn-secondary.btn-outline-secondary {
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      border-color: rgba(148, 163, 184, 0.7);
+      color: #1d4ed8;
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, .08);
+    }
+    .btn-outline-secondary:hover {
+      background-color: #eff6ff;
+      color: #1d4ed8;
+      border-color: rgba(59, 130, 246, .6);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, .12);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline-primary {
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      border-color: rgba(59, 130, 246, .7);
+      color: #1d4ed8;
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, .08);
+    }
+    .btn-outline-primary:hover {
+      background-color: #eff6ff;
+      color: #1d4ed8;
+      border-color: rgba(59, 130, 246, .9);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, .12);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline-danger {
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      box-shadow: 0 2px 8px rgba(248, 113, 113, .25);
+    }
+
+    /* modal 裡的取消按鈕維持 bootstrap 預設，只是圓角統一 */
+    .btn-secondary {
+      border-radius: 999px;
+    }
+
+    /* ====== Navbar 搜尋列：沿用設計但配藍色 ====== */
     .search-container-wrapper { position: relative; width: 100%; max-width: 400px; }
     .search-container {
         position: relative; display: flex; align-items: center;
@@ -81,27 +389,14 @@ $API_BASE_URL  = '/lamian-ukn/api';
         cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     .search-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
-    .search-btn i { color: #ff6b6b; font-size: 16px; }
-    .user-avatar{border:2px solid rgba(255,255,255,.5)}
+    .search-btn i { color: #2563eb; font-size: 16px; }
 
-    .container-fluid{ padding:30px !important; }
-    h1{ background: var(--primary-gradient); -webkit-background-clip:text; background-clip:text;
-      color:transparent; -webkit-text-fill-color:transparent; font-weight:700; font-size:2.5rem; margin-bottom:30px; }
-    .breadcrumb{ background: rgba(255,255,255,.8); border-radius: var(--border-radius); padding: 15px 20px; box-shadow: var(--card-shadow); backdrop-filter: blur(10px); }
-    .card{ border:none; border-radius: var(--border-radius); box-shadow: var(--card-shadow); background:#fff; overflow:hidden; }
-    .card-header{ background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(255,255,255,.7)); font-weight:600; }
-    .table thead th{ background: var(--primary-gradient); color:#000; border:none; }
-    .btn-primary{
-      background: var(--primary-gradient) !important;
-      border: none !important;
-      border-radius: 25px;
-      color: #fff;
+    .user-avatar {
+      border: 2px solid rgba(255, 255, 255, .5);
     }
-    .btn-primary:hover,.btn-primary:focus,.btn-primary:active{
-      background: var(--primary-gradient) !important;
-      filter: brightness(1.05);
-      box-shadow: 0 10px 25px rgba(209,209,209,.976);
-      color: #fff;
+
+    .form-select, .form-control {
+      border-radius: 12px;
     }
   </style>
 </head>
@@ -111,16 +406,7 @@ $API_BASE_URL  = '/lamian-ukn/api';
       <a class="navbar-brand ps-3" href="index.php">員工管理系統</a>
       <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
 
-      <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-          <div class="search-container-wrapper">
-              <div class="search-container">
-                  <input class="search-input" type="text" placeholder="搜尋員工、班表、薪資..." aria-label="Search" />
-                  <button class="search-btn" id="btnNavbarSearch" type="button">
-                      <i class="fas fa-search"></i>
-                  </button>
-              </div>
-          </div>
-      </form>
+      <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0"></form>
 
       <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
           <li class="nav-item dropdown">
@@ -159,7 +445,7 @@ $API_BASE_URL  = '/lamian-ukn/api';
                 <a class="nav-link" href="日報表記錄.php">日報表記錄</a>
                 <a class="nav-link" href="假別管理.php">假別管理</a>
                 <a class="nav-link" href="打卡管理.php">打卡管理</a>
-                <a class="nav-link" href="薪資管理.html">薪資管理</a>
+                <a class="nav-link" href="薪資管理.php">薪資管理</a>
               </nav>
             </div>
 
@@ -181,13 +467,10 @@ $API_BASE_URL  = '/lamian-ukn/api';
                   </nav>
                 </div>
                 <a class="nav-link" href="日報表.php"> <div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
-                <a class="nav-link" href="薪資管理.html"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
-                <a class="nav-link" href="班表.html"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
-              </nav>
+                </nav>
             </div>
 
-            <a class="nav-link" href="請假申請.php"><div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>請假申請</a>
-
+            
             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseWebsite" aria-expanded="false">
               <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>網站管理
               <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
@@ -666,41 +949,50 @@ $API_BASE_URL  = '/lamian-ukn/api';
     }
     
     // 執行刪除
-    async function executeDelete() {
-      const btn = qs('#btnConfirmDelete');
-      const type = btn.dataset.type;
-      const id = btn.dataset.id;
-      
-      // 🔥 修改：決定 API URL 和 body
-      const url = (type === 'category') ? API_CAT_API : API_PROD_API;
-      const body = { action: 'delete', id: id };
-      
-      setBusy(btn, true);
-      try {
-        const res = await fetch(url, {
-          method: 'POST', credentials: 'include',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(body)
-        });
-        const data = await res.json();
-        if (!res.ok || data.error) throw new Error(data.error || '刪除失敗');
-        
-        showOk('已刪除');
-        deleteModal.hide();
-        
-        if (type === 'category') {
-          await loadCategories(); // 重新載入
-          await loadProducts(); // 重新載入商品 (分類可能已變)
-        } else {
-          await loadProducts(); // 重新載入
-        }
+async function executeDelete() {
+  const btn  = qs('#btnConfirmDelete');
+  const type = btn.dataset.type;   // 'product' or 'category'
+  const id   = btn.dataset.id;
 
-      } catch(e) {
-        showErr('刪除失敗: ' + e.message);
-      } finally {
-        setBusy(btn, false);
-      }
+  if (!id) {
+    showErr('找不到要刪除的 ID（前端）');
+    return;
+  }
+
+  const url = (type === 'category') ? API_CAT_API : API_PROD_API;
+  const body = { action: 'delete', id: id };
+
+  setBusy(btn, true);
+  try {
+    const res  = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || data.detail || '刪除失敗');
     }
+
+    showOk('已刪除');
+    deleteModal.hide();
+
+    if (type === 'category') {
+      await loadCategories();
+      await loadProducts();
+    } else {
+      await loadProducts();
+    }
+  } catch (e) {
+    console.error('刪除失敗', e);
+    showErr('刪除失敗: ' + e.message);
+  } finally {
+    setBusy(btn, false);
+  }
+}
 
     // ===== 載入登入者資訊 (同其他頁) =====
     async function loadLoggedInUser(){

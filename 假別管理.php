@@ -5,9 +5,8 @@
 require_once __DIR__ . '/includes/auth_check.php';
 
 // 只有 A 級（老闆）可以訪問
-if (!check_user_level('A', false)) {
-    show_no_permission_page(); // 會 exit
-}
+// 2. 檢查權限:A 級(老闆)或 B 級(管理員)
+    check_user_level(['A', 'B'], true);
 
 // 取得用戶資訊
 $user = get_user_info();
@@ -35,241 +34,374 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
   <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
 
 <style>
-    /* ... (您在 假別管理.html (檔案 6) 中的 CSS 樣式表，保持不變) ... */
-    :root {
-      --primary-gradient: linear-gradient(135deg, #fbb97ce4 0%, #ff0000cb 100%);
-      --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      --success-gradient: linear-gradient(135deg, #4facfe 0%, #54bcc1 100%);
-      --warning-gradient: linear-gradient(135deg, #fbb97ce4 0%, #ff00006a 100%);
-      --dark-bg: linear-gradient(135deg, #fbb97ce4 0%, #ff00006a 100%);
-      --card-shadow: 0 15px 35px rgba(0,0,0,.1);
-      --hover-shadow: 0 25px 50px rgba(0,0,0,.15);
-      --border-radius: 20px;
-      --transition: all .3s cubic-bezier(.4,0,.2,1);
-    }
-    * { transition: var(--transition); }
-    body {
-      background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100vh;
-    }
-    .sb-topnav {
-      background: var(--dark-bg) !important;
-      border: none;
-      box-shadow: var(--card-shadow);
-      backdrop-filter: blur(10px);
-    }
-    .navbar-brand {
-      font-weight: 700;
-      font-size: 1.5rem;
-      background: linear-gradient(45deg, #ffffff, #ffffff);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      text-shadow: none;
-    }
-    
-    /* 🔥 修正：使用 員工資料表.php 的頂欄搜尋框樣式 */
-    .search-container-wrapper {
-        position: relative;
-        width: 100%;
-        max-width: 400px;
-    }
-    .search-container {
-        position: relative;
-        display: flex;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 50px;
-        padding: 4px 4px 4px 20px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        backdrop-filter: blur(10px);
-        border: 2px solid transparent;
-    }
-    .search-container:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
-    }
-    .search-container:focus-within {
-        background: rgba(255, 255, 255, 0.25);
-        border-color: rgba(255, 255, 255, 0.5);
-    }
-    .search-input {
-        flex: 1;
-        border: none;
-        outline: none;
-        background: transparent;
-        padding: 10px 12px;
-        font-size: 14px;
-        color: #fff;
-        font-weight: 500;
-    }
-    .search-input::placeholder {
-        color: rgba(255, 255, 255, 0.7);
-        font-weight: 400;
-    }
-    .search-btn {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-        border: none;
-        border-radius: 40px;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    .search-btn:hover {
-        transform: scale(1.08);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-    }
-    .search-btn i {
-        color: #ff6b6b;
-        font-size: 16px;
-    }
-    .user-avatar{border:2px solid rgba(255,255,255,.5)}
+  /* ====== 跟 index.php 相同的整體風格 ====== */
+  :root {
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 30%, #f5e9ff 100%);
+    --text-main: #0f172a;
+    --text-subtle: #64748b;
 
-    .sb-sidenav {
-      background: linear-gradient(180deg, #fbb97ce4 0%, #ff00006a 100%) !important;
-      box-shadow: var(--card-shadow);
-      backdrop-filter: blur(10px);
+    --card-bg: rgba(255, 255, 255, 0.96);
+    --card-radius: 22px;
+
+    --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+    --shadow-hover: 0 22px 60px rgba(15, 23, 42, 0.18);
+
+    --transition-main: all .25s cubic-bezier(.4, 0, .2, 1);
+  }
+
+  * {
+    transition: var(--transition-main);
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.24), transparent 55%),
+      radial-gradient(circle at 100% 0%, rgba(222, 114, 244, 0.24), transparent 55%),
+      var(--bg-gradient);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text-main);
+  }
+
+  /* ====== Top navbar（與 index 一樣的藍色漸層） ====== */
+  .sb-topnav {
+    background: linear-gradient(120deg, #1e3a8a, #3658ff) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.42);
+    backdrop-filter: blur(18px);
+  }
+
+  .navbar-brand {
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #f9fafb !important;
+  }
+
+  .navbar-nav .nav-link {
+    color: #e5e7eb !important;
+  }
+
+  .navbar-nav .nav-link:hover {
+    color: #ffffff !important;
+  }
+
+  .container-fluid {
+    padding: 26px 28px !important;
+  }
+
+  /* 🔍 頂欄搜尋框（沿用你現在的 search-container，配藍色 Navbar） */
+  .search-container-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+  }
+  .search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    padding: 4px 4px 4px 20px;
+    backdrop-filter: blur(10px);
+    border: 2px solid transparent;
+  }
+  .search-container:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .search-container:focus-within {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #ffffff;
+    font-weight: 500;
+  }
+  .search-input::placeholder {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 400;
+  }
+  .search-btn {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
+    border: none;
+    border-radius: 40px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+  }
+  .search-btn i {
+    color: #2563eb;
+    font-size: 16px;
+  }
+  .user-avatar {
+    border: 2px solid rgba(255,255,255,.5);
+  }
+
+  /* ====== Sidebar：淡藍漸層延伸（與 index 相同） ====== */
+  .sb-sidenav {
+    background:
+      radial-gradient(circle at 40% 0%, rgba(56, 189, 248, 0.38), transparent 65%),
+      radial-gradient(circle at 80% 100%, rgba(147, 197, 253, 0.34), transparent 70%),
+      linear-gradient(180deg, rgba(220, 235, 255, 0.92), rgba(185, 205, 255, 0.9));
+    backdrop-filter: blur(22px);
+    border-right: 1px solid rgba(255, 255, 255, 0.55);
+  }
+
+  .sb-sidenav-menu-heading {
+    color: #1e293b !important;
+    opacity: 0.75;
+    font-size: 0.78rem;
+    letter-spacing: .18em;
+    margin: 20px 0 8px 16px;
+  }
+
+  .sb-sidenav .nav-link {
+    color: #0f172a !important;
+    font-weight: 600;
+    border-radius: 18px;
+    padding: 12px 18px;
+    margin: 8px 12px;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.80),
+      rgba(241, 248, 255, 0.95)
+    );
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sb-sidenav .nav-link .sb-nav-link-icon {
+    margin-right: 10px;
+    color: #1e293b !important;
+    opacity: 0.9 !important;
+    font-size: 1.05rem;
+  }
+
+  .sb-sidenav .sb-sidenav-collapse-arrow i,
+  .sb-sidenav .nav-link i.fa-chevron-right {
+    color: #1e293b !important;
+    opacity: 0.85 !important;
+  }
+
+  .sb-sidenav .nav-link:hover {
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 14px 30px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .sb-sidenav .nav-link:hover .sb-nav-link-icon,
+  .sb-sidenav .nav-link:hover .sb-sidenav-collapse-arrow i,
+  .sb-sidenav .nav-link:hover i.fa-chevron-right {
+    color: #0f172a !important;
+    opacity: 1 !important;
+  }
+
+  .sb-sidenav .nav-link.active {
+    background: linear-gradient(135deg, #4f8bff, #7b6dff);
+    border-color: rgba(255, 255, 255, 0.98);
+    color: #ffffff !important;
+    box-shadow: 0 18px 36px rgba(59, 130, 246, 0.6);
+  }
+
+  .sb-sidenav .nav-link.active .sb-nav-link-icon,
+  .sb-sidenav .nav-link.active .sb-sidenav-collapse-arrow i {
+    color: #e0f2fe !important;
+  }
+
+  .sb-sidenav-footer {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.9),
+      rgba(226, 232, 255, 0.95)
+    ) !important;
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(148, 163, 184, 0.5);
+    padding: 16px 20px;
+    color: #111827 !important;
+    box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.10);
+    font-size: 0.95rem;
+  }
+
+  .sb-sidenav-footer .small {
+    color: #6b7280 !important;
+  }
+
+  /* 修正側邊欄箭頭、SVG 顏色（與 index 相同） */
+  .sb-sidenav .nav-link svg,
+  .sb-sidenav .nav-link svg path,
+  .sb-sidenav .nav-link i,
+  .sb-sidenav .nav-link::after {
+    stroke: #1e293b !important;
+    color: #1e293b !important;
+    fill: #1e293b !important;
+    opacity: 0.9 !important;
+  }
+  .sb-sidenav .nav-link:hover svg,
+  .sb-sidenav .nav-link:hover svg path,
+  .sb-sidenav .nav-link:hover i,
+  .sb-sidenav .nav-link:hover::after {
+    stroke: #0f172a !important;
+    color: #0f172a !important;
+    fill: #0f172a !important;
+    opacity: 1 !important;
+  }
+
+  /* ====== 標題 & 麵包屑 ====== */
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    background: linear-gradient(120deg, #0f172a, #2563eb);
+    -webkit-background-clip: text;
+    color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .breadcrumb {
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(10px);
+  }
+
+  .breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    color: #9ca3af;
+  }
+
+  /* ====== 卡片、表格（讓兩張卡看起來跟 index 一樣） ====== */
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--card-radius);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(239, 246, 255, 0.96));
+    border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding-top: 14px;
+    padding-bottom: 10px;
+  }
+
+  .card-body {
+    padding: 18px 20px 20px;
+  }
+
+  .table {
+    border-radius: 18px;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .table thead th {
+    background: linear-gradient(135deg, #4f8bff, #7b6dff);
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .table tbody td {
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    border-color: rgba(148, 163, 184, 0.16);
+  }
+
+  .table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.06);
+  }
+
+  /* alert 區塊微調，讓它跟整體一致 */
+  #errorAlert,
+  #successAlert {
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+    border: none;
+  }
+
+  /* 主要按鈕改成藍色漸層 */
+  .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    border: none;
+    border-radius: 25px;
+  }
+  .btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+  }
+
+  footer {
+    background: transparent;
+    border-top: 1px solid rgba(148, 163, 184, 0.35);
+    margin-top: 24px;
+    padding-top: 14px;
+    font-size: 0.8rem;
+    color: var(--text-subtle);
+  }
+
+  @media (max-width: 992px) {
+    .container-fluid {
+      padding: 20px 16px !important;
     }
-    .sb-sidenav-menu-heading {
-      color: rgba(255,255,255,.7) !important;
-      font-weight: 600;
-      font-size: .85rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 20px 15px 10px 15px !important;
-      margin-top: 15px;
+  }
+
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding: 16px 12px !important;
     }
-    .sb-sidenav .nav-link {
-      border-radius: 15px;
-      margin: 5px 15px;
-      padding: 12px 15px;
-      position: relative;
-      overflow: hidden;
-      color: rgba(255,255,255,.9) !important;
-      font-weight: 500;
-      backdrop-filter: blur(10px);
-    }
-    .sb-sidenav .nav-link:hover {
-      background: rgba(255,255,255,.15) !important;
-      transform: translateX(8px);
-      box-shadow: 0 8px 25px rgba(0,0,0,.2);
-      color: #fff !important;
-    }
-    .sb-sidenav .nav-link.active {
-      background: rgba(255,255,255,.2) !important;
-      color: #fff !important;
-      font-weight: 600;
-      box-shadow: 0 8px 25px rgba(0,0,0,.15);
-    }
-    .sb-sidenav .nav-link::before {
-      content: '';
-      position: absolute; left: 0; top: 0; height: 100%; width: 4px;
-      background: linear-gradient(45deg, #ffffff, #ffffff);
-      transform: scaleY(0);
-      transition: var(--transition);
-      border-radius: 0 10px 10px 0;
-    }
-    .sb-sidenav .nav-link:hover::before,
-    .sb-sidenav .nav-link.active::before { transform: scaleY(1); }
-    .sb-sidenav .nav-link i { width: 20px; text-align: center; margin-right: 10px; font-size: 1rem; }
-    .sb-sidenav-footer {
-      background: rgba(255,255,255,.1) !important;
-      color: #fff !important;
-      border-top: 1px solid rgba(255,255,255,.2);
-      padding: 20px 15px;
-      margin-top: 20px;
-    }
-    .container-fluid { padding: 30px !important; }
     h1 {
-      background: var(--primary-gradient);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      font-weight: 700;
-      font-size: 2.5rem;
-      margin-bottom: 30px;
+      font-size: 1.6rem;
     }
-    .breadcrumb {
-      background: rgba(255,255,255,.8);
-      border-radius: var(--border-radius);
-      padding: 15px 20px;
-      box-shadow: var(--card-shadow);
-      backdrop-filter: blur(10px);
-    }
-    .table {
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      background: #fff;
-      box-shadow: var(--card-shadow);
-    }
-    .table thead th {
-      background: var(--primary-gradient);
-      color: #000;
-      border: none;
-      font-weight: 600;
-      padding: 15px;
-    }
-    .table tbody td {
-      padding: 15px;
-      vertical-align: middle;
-      border-color: rgba(0,0,0,.05);
-    }
-    .table tbody tr:hover {
-      background: rgba(227, 23, 111, 0.05);
-      transform: scale(1.01);
-    }
-    .btn-primary {
-      background: var(--primary-gradient);
-      border: none;
-      border-radius: 25px;
-    }
-    .btn-primary:hover {
-      transform: scale(1.05);
-      box-shadow: 0 10px 25px rgba(209, 209, 209, 0.976);
-    }
+  }
 </style>
 </head>
 
 <body class="sb-nav-fixed">
   <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-      <a class="navbar-brand ps-3" href="index.php">員工管理系統</a>
-      <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+    <a class="navbar-brand ps-3" href="index.php">員工管理系統</a>
+    <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
 
-      <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-          <div class="search-container-wrapper">
-              <div class="search-container">
-                  <input class="search-input" type="text" placeholder="搜尋員工、班表、薪資..." aria-label="Search" />
-                  <button class="search-btn" id="btnNavbarSearch" type="button">
-                      <i class="fas fa-search"></i>
-                  </button>
-              </div>
-          </div>
-      </form>
+    <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0"></form>
 
-      <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-          <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <img class="user-avatar rounded-circle me-1" src="https://i.pravatar.cc/40?u=<?php echo urlencode($userName); ?>" width="28" height="28" alt="User Avatar" style="vertical-align:middle;">
-                  <span id="navUserName"><?php echo htmlspecialchars($userName); ?></span>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                  <li><a class="dropdown-item" href="帳號設置.php">帳號設置</a></li>
-                  <li><hr class="dropdown-divider" /></li>
-                  <li><a class="dropdown-item" href="logout.php"><i class="fas fa-right-from-bracket me-2"></i>登出</a></li>
-              </ul>
-          </li>
-      </ul>
+    <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <img class="user-avatar rounded-circle me-1" src="https://i.pravatar.cc/40?u=<?php echo urlencode($userName); ?>" width="28" height="28" alt="User Avatar" style="vertical-align:middle;">
+          <span id="navUserName"><?php echo htmlspecialchars($userName); ?></span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+          <li><a class="dropdown-item" href="帳號設置.php">帳號設置</a></li>
+          <li><hr class="dropdown-divider" /></li>
+          <li><a class="dropdown-item" href="logout.php"><i class="fas fa-right-from-bracket me-2"></i>登出</a></li>
+        </ul>
+      </li>
+    </ul>
   </nav>
 
-  <div id="layoutSidenav">
+<div id="layoutSidenav">
+    <!-- 側欄 -->
     <div id="layoutSidenav_nav">
       <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
         <div class="sb-sidenav-menu">
@@ -280,28 +412,43 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
             </a>
 
             <div class="sb-sidenav-menu-heading">Pages</div>
-            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="true">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+               data-bs-target="#collapseLayouts" aria-expanded="false">
               <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>人事管理
               <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
             </a>
-            <div class="collapse show" id="collapseLayouts" data-bs-parent="#sidenavAccordion">
+            <div class="collapse" id="collapseLayouts" data-bs-parent="#sidenavAccordion">
               <nav class="sb-sidenav-menu-nested nav">
-                <a class="nav-link" href="員工資料表.php">員工資料表</a>
-                <a class="nav-link" href="班表管理.php">班表管理</a>
-                <a class="nav-link" href="日報表記錄.php">日報表記錄</a>
-                <a class="nav-link active" href="假別管理.php">假別管理</a>
-                <a class="nav-link" href="打卡管理.php">打卡管理</a>
-                <a class="nav-link" href="薪資管理.html">薪資管理</a>
-              </nav>
-            </div>
+    <?php if ($userLevel === 'A'): ?>
+      <!-- 只有 A 級（老闆）可以看到 -->
+      <a class="nav-link" href="員工資料表.php">員工資料表</a>
+    <?php endif; ?>
 
-            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseOperation" aria-expanded="false">
+    <a class="nav-link" href="班表管理.php">班表管理</a>
+     <?php if ($userLevel === 'A'): ?>
+      <!-- 只有 A 級（老闆）可以看到 -->
+      <a class="nav-link" href="日報表記錄.php">日報表記錄</a>
+    <?php endif; ?>   
+    <a class="nav-link" href="假別管理.php">假別管理</a>
+    <a class="nav-link" href="打卡管理.php">打卡管理</a>
+
+    <?php if ($userLevel === 'A'): ?>
+      <!-- 只有 A 級（老闆）可以看到 -->
+      <a class="nav-link" href="薪資管理.php">薪資管理</a>
+    <?php endif; ?>
+
+  </nav>
+</div>
+
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+               data-bs-target="#collapseOperation" aria-expanded="false">
               <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>營運管理
               <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
             </a>
             <div class="collapse" id="collapseOperation" data-bs-parent="#sidenavAccordion">
               <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionOperation">
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#operationCollapseInventory" aria-expanded="false">
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                   data-bs-target="#operationCollapseInventory" aria-expanded="false">
                   庫存管理
                   <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                 </a>
@@ -309,24 +456,28 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
                   <nav class="sb-sidenav-menu-nested nav">
                     <a class="nav-link" href="庫存查詢.php">庫存查詢</a>
                     <a class="nav-link" href="庫存調整.php">庫存調整</a>
+                    <a class="nav-link" href="商品管理.php">商品管理</a>
                   </nav>
                 </div>
-                <a class="nav-link" href="日報表.php"> <div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表</a>
-                <a class="nav-link" href="薪資管理.html"><div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>薪資記錄</a>
-                <a class="nav-link" href="班表.html"><div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>班表</a>
+
+                <a class="nav-link" href="日報表.php">
+                  <div class="sb-nav-link-icon"><i class="fas fa-file-invoice-dollar"></i></div>日報表
+                </a>
               </nav>
             </div>
-
-            <a class="nav-link" href="請假申請.php"><div class="sb-nav-link-icon"><i class="fas fa-calendar-alt"></i></div>請假申請</a>
-
-            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseWebsite" aria-expanded="false">
-              <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>網站管理
+            
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+               data-bs-target="#collapseWebsite" aria-expanded="false">
+              <div class="sb-nav-link-icon"><i class="fas fa-cogs"></i></div>會員管理
               <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
             </a>
             <div class="collapse" id="collapseWebsite" data-bs-parent="#sidenavAccordion">
               <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionWebsite">
-                <a class="nav-link" href="layout-static.php">官網資料修改</a>
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#websiteCollapseMember" aria-expanded="false">
+                <a class="nav-link" href="member-list.php">會員清單</a>
+                <a class="nav-link" href="member-detail.php">詳細資料頁</a>
+                <a class="nav-link" href="point-manage.php">點數管理</a>
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                   data-bs-target="#websiteCollapseMember" aria-expanded="false">
                   會員管理
                   <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                 </a>
@@ -341,16 +492,22 @@ $DATA_BASE_URL = '/lamian-ukn/首頁';
             </div>
 
             <div class="sb-sidenav-menu-heading">Addons</div>
-            <a class="nav-link" href="charts.html"><div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>Charts</a>
+            <a class="nav-link" href="charts.html">
+              <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>Charts
+            </a>
+            <a class="nav-link" href="tables.html">
+              <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>Tables
+            </a>
           </div>
         </div>
 
         <div class="sb-sidenav-footer">
-            <div class="small">Logged in as:</div>
-            <span id="loggedAs"><?php echo htmlspecialchars($userName); ?></span>
+          <div class="small">Logged in as:</div>
+          <span id="loggedAs"><?= htmlspecialchars($userName); ?></span>
         </div>
       </nav>
     </div>
+
 
     <div id="layoutSidenav_content">
       <main>

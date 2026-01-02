@@ -1,0 +1,35 @@
+[17-Nov-2025 02:02:38 Europe/Berlin] ✅ 從 SESSION['name'] 取得員工: aaa
+[17-Nov-2025 02:02:38 Europe/Berlin] 📝 請假申請 - 員工: aaa, ID: C130015
+[17-Nov-2025 02:02:38 Europe/Berlin] ✅ 請假申請插入成功 - ID: 64, 員工: aaa
+[17-Nov-2025 02:02:41 Europe/Berlin] Email 發送成功: aaa
+[17-Nov-2025 02:06:15 Europe/Berlin] ✅ 從 SESSION['name'] 取得員工: 金珉奎
+[17-Nov-2025 02:06:15 Europe/Berlin] 📝 請假申請 - 員工: 金珉奎, ID: C132347
+[17-Nov-2025 02:06:16 Europe/Berlin] ✅ 請假申請插入成功 - ID: 65, 員工: 金珉奎
+[17-Nov-2025 02:06:22 Europe/Berlin] Email 發送成功: 金珉奎
+[01-Dec-2025 09:40:33 Europe/Berlin] ✅ 從 SESSION['name'] 取得員工: ILING LIN
+[01-Dec-2025 09:40:33 Europe/Berlin] 📝 請假申請 - 員工: ILING LIN, ID: C130020
+[01-Dec-2025 09:40:33 Europe/Berlin] ✅ 請假申請插入成功 - ID: 57, 員工: ILING LIN
+[01-Dec-2025 09:40:38 Europe/Berlin] Email 發送成功: ILING LIN
+[08-Dec-2025 10:33:56 Europe/Berlin] ✅ 從 SESSION['name'] 取得員工: 胡瓜
+[08-Dec-2025 10:33:56 Europe/Berlin] 📝 請假申請 - 員工: 胡瓜, ID: C130043
+[08-Dec-2025 10:33:56 Europe/Berlin] 請假申請錯誤: 只支持 JPG、PNG、HEIC 格式
+[08-Dec-2025 10:34:15 Europe/Berlin] ✅ 從 SESSION['name'] 取得員工: 胡瓜
+[08-Dec-2025 10:34:15 Europe/Berlin] 📝 請假申請 - 員工: 胡瓜, ID: C130043
+[08-Dec-2025 10:34:15 Europe/Berlin] ✅ 請假申請插入成功 - ID: 58, 員工: 胡瓜
+[08-Dec-2025 10:34:19 Europe/Berlin] Email 發送成功: 胡瓜
+[10-Dec-2025 06:10:21 Europe/Berlin] ✅ 從 SESSION['name'] 取得員工: 胡瓜
+[10-Dec-2025 06:10:21 Europe/Berlin] 📝 請假申請 - 員工: 胡瓜, ID: C130043
+[10-Dec-2025 06:10:21 Europe/Berlin] ✅ 請假申請插入成功 - ID: 59, 員工: 胡瓜
+[10-Dec-2025 06:10:25 Europe/Berlin] Email 發送成功: 胡瓜
+[10-Dec-2025 12:21:23 Europe/Berlin] ✅ 從 SESSION['name'] 取得員工: aaa
+[10-Dec-2025 12:21:23 Europe/Berlin] 📝 請假申請 - 員工: aaa, ID: C130015
+[10-Dec-2025 12:21:23 Europe/Berlin] ✅ 請假申請插入成功 - ID: 60, 員工: aaa
+[10-Dec-2025 12:21:27 Europe/Berlin] Email 發送成功: aaa
+[17-Dec-2025 08:55:15 Europe/Berlin] ✅ 從 SESSION['name'] 取得員工: ILING LIN
+[17-Dec-2025 08:55:15 Europe/Berlin] 📝 請假申請 - 員工: ILING LIN, ID: C130020
+[17-Dec-2025 08:55:15 Europe/Berlin] ✅ 請假申請插入成功 - ID: 61, 員工: ILING LIN
+[17-Dec-2025 08:55:18 Europe/Berlin] Email 發送成功: ILING LIN
+[22-Dec-2025 09:36:26 Europe/Berlin] ✅ 從 SESSION['name'] 取得員工: ILING LIN
+[22-Dec-2025 09:36:26 Europe/Berlin] 📝 請假申請 - 員工: ILING LIN, ID: C130020
+[22-Dec-2025 09:36:26 Europe/Berlin] ✅ 請假申請插入成功 - ID: 62, 員工: ILING LIN
+[22-Dec-2025 09:36:33 Europe/Berlin] Email 發送成功: ILING LIN
